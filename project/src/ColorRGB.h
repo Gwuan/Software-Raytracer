@@ -1,5 +1,6 @@
 #pragma once
 #include "MathHelpers.h"
+#include <algorithm>
 
 namespace dae
 {

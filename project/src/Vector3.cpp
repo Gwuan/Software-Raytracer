@@ -49,16 +49,15 @@ namespace dae {
 
 	float Vector3::Dot(const Vector3& v1, const Vector3& v2)
 	{
-		//todo W1
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
 	}
 
 	Vector3 Vector3::Cross(const Vector3& v1, const Vector3& v2)
 	{
-		//todo W1
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		const float i{ (v1.y * v2.z) - (v2.y * v1.z) };
+		const float j{ -1 * ((v1.x * v2.z) - (v2.x * v1.z)) };
+		const float k{ (v1.x * v2.y) - (v2.x * v1.y) };
+		return { i, j, k };
 	}
 
 	Vector3 Vector3::Project(const Vector3& v1, const Vector3& v2)
