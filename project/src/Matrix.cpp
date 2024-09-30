@@ -103,9 +103,14 @@ namespace dae {
 
 	Matrix Matrix::CreateTranslation(float x, float y, float z)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		Matrix result;
+
+		result.data[0] = { 0, 0, 0, 0 };
+		result.data[1] = { 0, 0, 0, 0 };
+		result.data[2] = { 0, 0, 0, 0 };
+		result.data[3] = { x, y, z, 1 };
+
+		return result;
 	}
 
 	Matrix Matrix::CreateTranslation(const Vector3& t)
@@ -115,30 +120,42 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationX(float pitch)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		Matrix result;
+		result.data[0] = { 1, 0, 0, 0 };
+		result.data[1] = { 0, cos(pitch), sin(pitch), 0 };
+		result.data[2] = { 0, -sin(pitch), cos(pitch), 0 };
+		result.data[3] = { 0, 0, 0, 1 };
+
+		return result;
 	}
 
 	Matrix Matrix::CreateRotationY(float yaw)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		Matrix result;
+
+		result.data[0] = { cos(yaw), 0, -sin(yaw), 0 };
+		result.data[1] = { 0, 1, 0, 0 };
+		result.data[2] = { sin(yaw), 0, cos(yaw), 0 };
+		result.data[3] = { 0, 0, 0, 1 };
+
+		return result;
 	}
 
 	Matrix Matrix::CreateRotationZ(float roll)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		Matrix result;
+
+		result.data[0] = { cos(roll), sin(roll), 0, 0 };
+		result.data[1] = { -sin(roll), cos(roll), 0, 0 };
+		result.data[2] = { 0, 0, 1, 0 };
+		result.data[3] = { 0, 0, 0, 1 };
+
+		return result;
 	}
 
 	Matrix Matrix::CreateRotation(const Vector3& r)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		return CreateRotationX(r[0]) * CreateRotationY(r[1]) * CreateRotationZ(r[2]);
 	}
 
 	Matrix Matrix::CreateRotation(float pitch, float yaw, float roll)
@@ -148,9 +165,14 @@ namespace dae {
 
 	Matrix Matrix::CreateScale(float sx, float sy, float sz)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		Matrix result;
+
+		result.data[0] = { sx, 0, 0, 0 };
+		result.data[1] = { 0, sy, 0, 0 };
+		result.data[2] = { 0, 0, sz, 0 };
+		result.data[3] = { 0, 0, 0, 1 };
+
+		return result;
 	}
 
 	Matrix Matrix::CreateScale(const Vector3& s)
