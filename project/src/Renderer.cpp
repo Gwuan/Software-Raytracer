@@ -19,6 +19,8 @@ Renderer::Renderer(SDL_Window * pWindow) :
 	//Initialize
 	SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
 	m_pBufferPixels = static_cast<uint32_t*>(m_pBuffer->pixels);
+
+	m_AspectRatio = static_cast<float>(m_Width) / static_cast<float>(m_Height);
 }
 
 void Renderer::Render(Scene* pScene) const
@@ -27,15 +29,32 @@ void Renderer::Render(Scene* pScene) const
 	auto& materials = pScene->GetMaterials();
 	auto& lights = pScene->GetLights();
 
-	for (int px{}; px < m_Width; ++px)
-	{
-		for (int py{}; py < m_Height; ++py)
-		{
-			float gradient = px / static_cast<float>(m_Width);
-			gradient += py / static_cast<float>(m_Width);
-			gradient /= 2.0f;
+	// Converting the m_Width & m_Height to float instead inside the loop gives 2 fps more
+	// TODO: Benchmark this
+	const float widthF = static_cast<float>(m_Width);
+	const float heightF = static_cast<float>(m_Height);
 
-			ColorRGB finalColor{ gradient, gradient, gradient };
+	for (unsigned int px{}; px < m_Width; ++px)
+	{
+		float xCdn = (((2 * (static_cast<float>(px) + 0.5f)) / widthF) - 1) * m_AspectRatio;
+		for (unsigned int py{}; py < m_Height; ++py)
+		{
+
+			float yCdn = 1 - 2 * ((static_cast<float>(py) + 0.5f) / heightF);
+
+			Vector3 rayDirection{ xCdn, yCdn, 1 };
+
+			Ray viewRay{ {0,0,0}, rayDirection };
+
+			ColorRGB finalColor{};
+
+			HitRecord closestHit{};
+			pScene->GetClosestHit(viewRay, closestHit);
+
+			if (closestHit.didHit)
+			{
+				finalColor = materials[closestHit.materialIndex]->Shade();
+			}
 
 			//Update Color in Buffer
 			finalColor.MaxToOne();
