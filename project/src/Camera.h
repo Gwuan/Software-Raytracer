@@ -15,11 +15,11 @@ namespace dae
 			origin{ _origin },
 			fovAngle{ _fovAngle }
 		{
+			CalculateFov();
 		}
 
 
 		Vector3 origin{};
-		float fovAngle{ 90.f };
 
 		Vector3 forward{ Vector3::UnitZ };
 		Vector3 up{ Vector3::UnitY };
@@ -30,6 +30,20 @@ namespace dae
 
 		Matrix cameraToWorld{};
 
+
+		float GetFovAmount() const { return fovAmount; }
+
+		void SetFovAngle(float angle)  // Adjust angle of FOV in degrees
+		{
+			fovAngle = angle;
+			CalculateFov();
+		}
+
+		void CalculateFov()
+		{
+			float fovAngleRad{ fovAngle / 180 * PI };
+			fovAmount = fovAngleRad / 2;
+		}
 
 		Matrix CalculateCameraToWorld()
 		{
@@ -53,5 +67,10 @@ namespace dae
 			//todo: W2
 			//throw std::runtime_error("Not Implemented Yet");
 		}
+
+	private:
+		float fovAngle{ 90.f };
+		float fovAmount{};  // TODO: Create a better identifier
+
 	};
 }

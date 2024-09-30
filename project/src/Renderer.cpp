@@ -36,15 +36,15 @@ void Renderer::Render(Scene* pScene) const
 
 	for (unsigned int px{}; px < m_Width; ++px)
 	{
-		float xCdn = (((2 * (static_cast<float>(px) + 0.5f)) / widthF) - 1) * m_AspectRatio;
+		float xCdn = ((((2 * (static_cast<float>(px) + 0.5f)) / widthF) - 1) * m_AspectRatio) * camera.GetFovAmount();
 		for (unsigned int py{}; py < m_Height; ++py)
 		{
 
-			float yCdn = 1 - 2 * ((static_cast<float>(py) + 0.5f) / heightF);
+			float yCdn = (1 - 2 * ((static_cast<float>(py) + 0.5f) / heightF)) * camera.GetFovAmount();
 
 			Vector3 rayDirection{ xCdn, yCdn, 1 };
 
-			Ray viewRay{ {0,0,0}, rayDirection };
+			Ray viewRay{ camera.origin, rayDirection };
 
 			ColorRGB finalColor{};
 
