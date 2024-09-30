@@ -11,9 +11,33 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W1
-			throw std::runtime_error("Not Implemented Yet");
-			return false;
+			const Vector3 SphereRayVec{ ray.origin - sphere.origin };
+
+			const float a = Vector3::Dot(ray.direction, ray.direction);
+			const float b = Vector3::Dot(ray.direction, SphereRayVec) * 2;
+			const float c = Vector3::Dot(SphereRayVec, SphereRayVec) - (sphere.radius * sphere.radius);
+
+			const float discriminant = (b * b) - (4.f * a * c);
+
+			const bool didHit = discriminant > 0;
+
+			if (!ignoreHitRecord && didHit)
+			{
+				const float squareD = sqrt(discriminant);
+				float t{};
+				t = ((b * -1) - squareD) / (2 * a);
+
+				if (t < ray.min)
+				{
+					t = ((b * -1) + squareD) / (2 * a);
+				}
+
+				hitRecord.didHit = true;
+				hitRecord.origin = ray.origin;
+				hitRecord.materialIndex = sphere.materialIndex;
+				hitRecord.t = t;
+			}
+			return didHit;
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
