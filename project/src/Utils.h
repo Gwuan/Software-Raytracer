@@ -19,9 +19,9 @@ namespace dae
 
 			const float discriminant = (b * b) - (4.f * a * c);
 
-			const bool didHit = discriminant > 0;
+			const bool anyHits = discriminant > 0;
 
-			if (!ignoreHitRecord && didHit)
+			if (anyHits)
 			{
 				const float squareD = sqrt(discriminant);
 				float t{};
@@ -30,14 +30,24 @@ namespace dae
 				if (t < ray.min)
 				{
 					t = ((b * -1) + squareD) / (2 * a);
+					if (t < ray.min)
+						return false;
 				}
 
-				hitRecord.didHit = true;
-				hitRecord.origin = ray.origin;
-				hitRecord.materialIndex = sphere.materialIndex;
-				hitRecord.t = t;
+				if(!ignoreHitRecord)
+				{
+					hitRecord.didHit = true;
+					hitRecord.origin = ray.origin;
+					hitRecord.materialIndex = sphere.materialIndex;
+					hitRecord.t = t;
+				}
+
+				return true;
 			}
-			return didHit;
+			else
+			{
+				return false;
+			}
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
@@ -107,7 +117,7 @@ namespace dae
 		//Direction from target to light
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
-			//todo W3
+			//todo W2
 			throw std::runtime_error("Not Implemented Yet");
 			return {};
 		}

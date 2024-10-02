@@ -122,10 +122,10 @@ namespace dae {
 	{
 		Matrix result;
 		result.data[0] = { 1, 0, 0, 0 };
-		result.data[1] = { 0, cos(pitch), sin(pitch), 0 };
-		result.data[2] = { 0, -sin(pitch), cos(pitch), 0 };
-		result.data[3] = { 0, 0, 0, 1 };
-
+		result.data[1] = { 0, cos(pitch), -sin(pitch), 0 };
+		result.data[2] = { 0, sin(pitch), cos(pitch), 0 };
+		result.data[3] = { 3, 0, 0, 1 };
+		
 		return result;
 	}
 
@@ -136,7 +136,7 @@ namespace dae {
 		result.data[0] = { cos(yaw), 0, -sin(yaw), 0 };
 		result.data[1] = { 0, 1, 0, 0 };
 		result.data[2] = { sin(yaw), 0, cos(yaw), 0 };
-		result.data[3] = { 0, 0, 0, 1 };
+		result.data[3] = { 0, 3, 0, 1 };
 
 		return result;
 	}
