@@ -20,6 +20,7 @@ Renderer::Renderer(SDL_Window * pWindow) :
 	SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
 	m_pBufferPixels = static_cast<uint32_t*>(m_pBuffer->pixels);
 
+	// Calculate AspectRatio for CDN
 	m_AspectRatio = static_cast<float>(m_Width) / static_cast<float>(m_Height);
 }
 
@@ -36,13 +37,17 @@ void Renderer::Render(Scene* pScene) const
 
 	for (unsigned int px{}; px < m_Width; ++px)
 	{
-		float xCdn = ((((2 * (static_cast<float>(px) + 0.5f)) / widthF) - 1) * m_AspectRatio) * camera.GetFovAmount();
+		float xCdn = ((((2 * (static_cast<float>(px) + 0.5f)) / widthF) - 1) * m_AspectRatio) * camera.GetFovValue();
 		for (unsigned int py{}; py < m_Height; ++py)
 		{
+			// y Value for CDN
+			float yCdn = (1 - 2 * ((static_cast<float>(py) + 0.5f) / heightF)) * camera.GetFovValue();
+			const Matrix cameraToWorld{ camera.CalculateCameraToWorld() };
 
-			float yCdn = (1 - 2 * ((static_cast<float>(py) + 0.5f) / heightF)) * camera.GetFovAmount();
-
+			// Creating the rayDirection
 			Vector3 rayDirection{ xCdn, yCdn, 1 };
+			rayDirection = cameraToWorld.TransformVector(rayDirection);
+			rayDirection.Normalize();
 
 			Ray viewRay{ camera.origin, rayDirection };
 

@@ -5,6 +5,8 @@
 #include "Maths.h"
 #include "Timer.h"
 
+#include <iostream>
+
 namespace dae
 {
 	struct Camera
@@ -25,13 +27,15 @@ namespace dae
 		Vector3 up{ Vector3::UnitY };
 		Vector3 right{ Vector3::UnitX };
 
+		Vector3 worldUp{ Vector3::UnitY };
+
 		float totalPitch{ 0.f };
 		float totalYaw{ 0.f };
 
 		Matrix cameraToWorld{};
 
 
-		float GetFovAmount() const { return fovAmount; }
+		float GetFovValue() const { return m_fovValue; }
 
 		void SetFovAngle(float angle)  // Adjust angle of FOV in degrees
 		{
@@ -42,35 +46,76 @@ namespace dae
 		void CalculateFov()
 		{
 			float fovAngleRad{ fovAngle / 180 * PI };
-			fovAmount = fovAngleRad / 2;
+			m_fovValue = tan(fovAngleRad / 2);
 		}
 
-		Matrix CalculateCameraToWorld()
+		Matrix CalculateCameraToWorld()  // This function should return the Camera ONB Matrix
 		{
-			//todo: W2
-			throw std::runtime_error("Not Implemented Yet");
-			return {};
+			this->right = Vector3::Cross(this->worldUp, this->forward).Normalized();
+			this->up = Vector3::Cross(this->forward, this->right).Normalized();
+
+			return { this->right, this->up, this->forward, this->origin };
 		}
 
 		void Update(Timer* pTimer)
 		{
 			const float deltaTime = pTimer->GetElapsed();
+			HandleKeyboardInput(deltaTime);
+			HandleMouseInput(deltaTime);
 
-			//Keyboard Input
+			const Matrix finalRotation = Matrix::CreateRotationX(totalPitch) * Matrix::CreateRotationY(totalYaw);
+
+			this->forward = finalRotation.TransformVector(Vector3::UnitZ);
+			this->forward.Normalize();
+		}
+
+		void HandleKeyboardInput(const float elapsedTime)
+		{
 			const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
 
+			// Forward & backward
+			if (pKeyboardState[SDL_SCANCODE_W])
+				this->origin += this->forward * (m_MoveSpeed * elapsedTime);
+			if (pKeyboardState[SDL_SCANCODE_S])
+				this->origin -= this->forward * (m_MoveSpeed * elapsedTime);
 
-			//Mouse Input
+			// Right & Left
+			if (pKeyboardState[SDL_SCANCODE_D])
+				this->origin += this->right * (m_MoveSpeed * elapsedTime);
+			if (pKeyboardState[SDL_SCANCODE_A])
+				this->origin -= this->right * (m_MoveSpeed * elapsedTime);
+		}
+
+		void HandleMouseInput(const float elapsedTime)
+		{
+			// Get mouse input
 			int mouseX{}, mouseY{};
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
-			//todo: W2
-			//throw std::runtime_error("Not Implemented Yet");
+			if (mouseState == SDL_BUTTON(1))  // Left Mouse Button
+			{
+				this->origin += this->forward * ((mouseY * -1) * m_MoveSpeed) * elapsedTime;
+				this->totalYaw += mouseX * m_RotationSpeed * elapsedTime;
+			}
+
+			if (mouseState == SDL_BUTTON(3))  // Right Mouse Button
+			{
+				this->totalPitch += (mouseY * -1) * m_RotationSpeed * elapsedTime;
+				this->totalYaw += mouseX * m_RotationSpeed * elapsedTime;
+			}
+
+			if (mouseState == SDL_BUTTON(1) + SDL_BUTTON(3))  // Left & Right button
+			{
+				this->origin += worldUp * ((mouseY * -1) * m_MoveSpeed * elapsedTime);
+			}
 		}
+
 
 	private:
 		float fovAngle{ 90.f };
-		float fovAmount{};  // TODO: Create a better identifier
+		float m_fovValue{};  // TODO: Create a better identifier
 
+		const float m_MoveSpeed = 5.f;
+		const float m_RotationSpeed = 0.2f;
 	};
 }
