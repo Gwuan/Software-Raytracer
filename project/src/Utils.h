@@ -27,10 +27,10 @@ namespace dae
 				float t{};
 				t = ((b * -1) - squareD) / (2 * a);
 
-				if (t < ray.min)
+				if (t < ray.min || t > ray.max)
 				{
 					t = ((b * -1) + squareD) / (2 * a);
-					if (t < ray.min)
+					if (t < ray.min || t > ray.max)
 						return false;
 				}
 
@@ -40,6 +40,7 @@ namespace dae
 					hitRecord.origin = ray.origin;
 					hitRecord.materialIndex = sphere.materialIndex;
 					hitRecord.t = t;
+					hitRecord.normal = Vector3{ray.direction * -1}.Normalized();
 				}
 
 				return true;
@@ -70,6 +71,7 @@ namespace dae
 				hitRecord.materialIndex = plane.materialIndex;
 				hitRecord.didHit = true;
 				hitRecord.origin = ray.origin;
+				hitRecord.normal = Vector3{ray.direction * -1}.Normalized();
 			}
 
 			return didHit;
@@ -118,8 +120,19 @@ namespace dae
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
 			//todo W2
-			throw std::runtime_error("Not Implemented Yet");
-			return {};
+			// Both light types: Point & directional lights (direction lights dont have an origin, magnitude of this direction is equal to FLT_MAX)
+			// Return a unnormalized vector going from origin to lights origin
+			// Because the returned vector in unnormalized, you can perform the normalization call inside your shadowing logic and automatically capture the magnitude distance between hit and light
+
+			if (light.type == LightType::Point)
+			{
+				return { light.origin - origin };
+			}
+			else
+			{
+				throw std::runtime_error("Not Implemented Yet");
+				return {};
+			}
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)

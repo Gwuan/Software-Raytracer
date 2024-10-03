@@ -61,8 +61,6 @@ namespace dae {
 
 	bool Scene::DoesHit(const Ray& ray) const
 	{
-		bool result{ false };
-
 		for (size_t i{ 0 }; i < m_SphereGeometries.size(); ++i)
 		{
 			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray))
