@@ -199,4 +199,29 @@ namespace dae {
 	}
 #pragma endregion
 
+#pragma region SCENE W3
+	void Scene_W3_TestScene::Initialize()
+	{
+		m_Camera.origin = { 0.f, 1.f, -5.f };
+		m_Camera.SetFovAngle(45.f);
+
+		// Default: Material id0 >> SolidColor Material (RED)
+		constexpr unsigned char matId_Solid_Red = 0;
+		const unsigned char matId_Solid_Blue = AddMaterial(new Material_SolidColor{ colors::Blue });
+		const unsigned char matId_Solid_Yellow = AddMaterial(new Material_SolidColor{ colors::Yellow });
+
+		// Spheres
+		AddSphere({ -.75f, 1.0f, 0.f }, 1.f, matId_Solid_Red);
+		AddSphere({ .75f, 1.0f, 0.f }, 1.f, matId_Solid_Blue);
+
+		// Plane
+		AddPlane({ 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f }, matId_Solid_Yellow);
+
+		// Light
+		AddPointLight({ 0.f, 5.f, 5.f }, 25.f, colors::White);
+
+		AddPointLight({ 0.f, 2.5f, -5.f }, 25.f, colors::White);
+	}
+#pragma endregion
+
 }
