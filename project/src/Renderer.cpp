@@ -60,22 +60,22 @@ void Renderer::Render(Scene* pScene) const
 			{
 				// finalColor = materials[closestHit.materialIndex]->Shade();
 
-				const Vector3 lightRayOrigin = viewRay.origin + viewRay.direction * closestHit.t + closestHit.normal * 0.0001f;
 				
 				const std::vector<Light>& lights = pScene->GetLights();  // Pass by reference, no copy reduces stack and optimized
 
 				for (size_t i{ 0 }; i < lights.size(); ++i)
 				{
+					const Vector3 lightRayOrigin = closestHit.origin + closestHit.normal * 0.0001f;
 					const Vector3 lightRayDirection = LightUtils::GetDirectionToLight(lights[i], lightRayOrigin);
 
 					float dotLight{ Vector3::Dot(closestHit.normal, lightRayDirection.Normalized()) };
 					if(dotLight > 0)
-						finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin) * dotLight;
+						finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin)  * materials[closestHit.materialIndex]->Shade() * dotLight;
 
-					//if (pScene->DoesHit({ lightRayOrigin, lightRayDirection.Normalized(), 0.0001f, lightRayDirection.Magnitude()}))
-					//{
-					//	finalColor *= 0.5f;
-					//}
+					if (pScene->DoesHit({ lightRayOrigin, lightRayDirection.Normalized(), 0.0001f, lightRayDirection.Magnitude()}))
+					{
+						finalColor *= 0.5f;
+					}
 				}
 			}
 
