@@ -13,15 +13,14 @@ namespace dae
 		{
 			const Vector3 SphereRayVec{ ray.origin - sphere.origin };
 
-			const float a = Vector3::Dot(ray.direction, ray.direction);
+			// const float a = Vector3::Dot(ray.direction, ray.direction);
+			const float a = ray.direction.SqrMagnitude();
 			const float b = Vector3::Dot(ray.direction, SphereRayVec) * 2;
-			const float c = Vector3::Dot(SphereRayVec, SphereRayVec) - (sphere.radius * sphere.radius);
+			const float c = SphereRayVec.SqrMagnitude() - (sphere.radius * sphere.radius);
 
 			const float discriminant = (b * b) - (4.f * a * c);
 
-			const bool anyHits = discriminant > 0;
-
-			if (anyHits)
+			if (discriminant > 0)
 			{
 				const float squareD = sqrt(discriminant);
 				float t{};
@@ -36,11 +35,14 @@ namespace dae
 
 				if(!ignoreHitRecord)
 				{
+					const Vector3 hitLocation{ ray.origin + ray.direction * t };
+					const Vector3 hitToCenter{ hitLocation - sphere.origin };
+
 					hitRecord.didHit = true;
-					hitRecord.origin = ray.origin;
+					hitRecord.origin = hitLocation;
 					hitRecord.materialIndex = sphere.materialIndex;
 					hitRecord.t = t;
-					hitRecord.normal = Vector3{ray.direction * -1}.Normalized();
+					hitRecord.normal = (hitToCenter / hitToCenter.Magnitude()).Normalized();
 				}
 
 				return true;
@@ -67,11 +69,12 @@ namespace dae
 
 			if (!ignoreHitRecord && didHit)
 			{
+				const Vector3 hitLocation{ ray.origin + ray.direction * t };
 				hitRecord.t = t;
 				hitRecord.materialIndex = plane.materialIndex;
 				hitRecord.didHit = true;
-				hitRecord.origin = ray.origin;
-				hitRecord.normal = Vector3{ray.direction * -1}.Normalized();
+				hitRecord.origin = hitLocation;
+				hitRecord.normal = plane.normal;
 			}
 
 			return didHit;
@@ -138,8 +141,7 @@ namespace dae
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)
 		{
 			//todo W3
-			throw std::runtime_error("Not Implemented Yet");
-			return {};
+			return light.color * (light.intensity / Vector3(light.origin - target).SqrMagnitude());
 		}
 	}
 

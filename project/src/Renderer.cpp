@@ -58,7 +58,7 @@ void Renderer::Render(Scene* pScene) const
 
 			if (closestHit.didHit)
 			{
-				finalColor = materials[closestHit.materialIndex]->Shade();
+				// finalColor = materials[closestHit.materialIndex]->Shade();
 
 				const Vector3 lightRayOrigin = viewRay.origin + viewRay.direction * closestHit.t + closestHit.normal * 0.0001f;
 				
@@ -66,12 +66,16 @@ void Renderer::Render(Scene* pScene) const
 
 				for (size_t i{ 0 }; i < lights.size(); ++i)
 				{
-					const Vector3 lightRayDirection =  LightUtils::GetDirectionToLight(lights[i], lightRayOrigin);
+					const Vector3 lightRayDirection = LightUtils::GetDirectionToLight(lights[i], lightRayOrigin);
 
-					if (pScene->DoesHit({ lightRayOrigin, lightRayDirection.Normalized(), 0.0001f, lightRayDirection.Magnitude()}))
-					{
-						finalColor *= 0.5f;
-					}
+					float dotLight{ Vector3::Dot(closestHit.normal, lightRayDirection.Normalized()) };
+					if(dotLight > 0)
+						finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin) * dotLight;
+
+					//if (pScene->DoesHit({ lightRayOrigin, lightRayDirection.Normalized(), 0.0001f, lightRayDirection.Magnitude()}))
+					//{
+					//	finalColor *= 0.5f;
+					//}
 				}
 			}
 
@@ -82,6 +86,7 @@ void Renderer::Render(Scene* pScene) const
 				static_cast<uint8_t>(finalColor.r * 255),
 				static_cast<uint8_t>(finalColor.g * 255),
 				static_cast<uint8_t>(finalColor.b * 255));
+
 		}
 	}
 
