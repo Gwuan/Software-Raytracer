@@ -59,22 +59,24 @@ void Renderer::Render(Scene* pScene) const
 			if (closestHit.didHit)
 			{
 				// finalColor = materials[closestHit.materialIndex]->Shade();
-
-				
-				const std::vector<Light>& lights = pScene->GetLights();  // Pass by reference, no copy reduces stack and optimized
-
 				for (size_t i{ 0 }; i < lights.size(); ++i)
 				{
 					const Vector3 lightRayOrigin = closestHit.origin + closestHit.normal * 0.0001f;
 					const Vector3 lightRayDirection = LightUtils::GetDirectionToLight(lights[i], lightRayOrigin);
 
-					float dotLight{ Vector3::Dot(closestHit.normal, lightRayDirection.Normalized()) };
-					if(dotLight > 0)
-						finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin)  * materials[closestHit.materialIndex]->Shade() * dotLight;
+					float shadow{ 0 };
 
-					if (pScene->DoesHit({ lightRayOrigin, lightRayDirection.Normalized(), 0.0001f, lightRayDirection.Magnitude()}))
+					if (pScene->DoesHit({ lightRayOrigin, lightRayDirection.Normalized(), 0.0001f, lightRayDirection.Magnitude() }))
+						shadow = .5f;
+
+
+					float ObserveredArea{ Vector3::Dot(closestHit.normal, lightRayDirection.Normalized()) };
+					if (ObserveredArea > 0)
 					{
-						finalColor *= 0.5f;
+						if(shadow < 0.0001f) // Check if there is no shadow
+							finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin)  * materials[closestHit.materialIndex]->Shade() * ObserveredArea;
+						else
+							finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin)  * materials[closestHit.materialIndex]->Shade() * ObserveredArea * shadow;
 					}
 				}
 			}
