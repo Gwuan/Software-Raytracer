@@ -111,26 +111,24 @@ namespace dae
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
 		{
 			//todo: W3
-			bool isMetal{ m_Metalness > 0 };
 
 			const ColorRGB f0 = (m_Metalness < 1.f) ? ColorRGB(.04f, .04f, .04f) : m_Albedo;
 
-			const Vector3 halfVector{ Vector3(v + l).Normalized()};
+			const Vector3 halfVector{ Vector3(v + l).Normalized() };
 
 			const auto f{ BRDF::FresnelFunction_Schlick(halfVector, v, f0) };  // Fresnel
 			const auto d{ BRDF::NormalDistribution_GGX(hitRecord.normal, halfVector, m_Roughness) };
 			const auto g{ BRDF::GeometryFunction_Smith(hitRecord.normal, v, l, m_Roughness) };
 
-			const ColorRGB specular{ ColorRGB(d * f * g) / (4.f * (Vector3::Dot(v, hitRecord.normal) * Vector3::Dot(l, hitRecord.normal))) };
-
-			ColorRGB kd{};
-
-			if (!isMetal)
-				kd = ColorRGB(1.f, 1.f, 1.f) - f;
-
+			ColorRGB kd = (m_Metalness < 1.f) ? ColorRGB(1.f, 1.f, 1.f) - f : ColorRGB{};
 			const auto diffuse{ BRDF::Lambert(kd, m_Albedo) };
 
-			return  diffuse + specular;
+			float vDotN = std::max(Vector3::Dot(v, hitRecord.normal), 0.f);
+			float lDotN = std::max(Vector3::Dot(l, hitRecord.normal), 0.f);
+
+			const ColorRGB specular{ ColorRGB(d * f * g) / (4.f * vDotN * lDotN) };
+
+			return diffuse + specular;
 		}
 
 	private:

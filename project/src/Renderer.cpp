@@ -82,9 +82,9 @@ void Renderer::Render(Scene* pScene) const
 						lightRayDirection.Magnitude()
 					};
 
-					float shadow{ 1 }; // 1 for no shadow
+					float shadow{ 1.f }; // 1 for no shadow
 					if (pScene->DoesHit(lightRay) && m_ShadowsEnabled)
-						shadow = .5f;
+						shadow = .6f;
 
 					const float ObserveredArea{ Vector3::Dot(closestHit.normal, lightRayDirection.Normalized()) };  // Lambert cosine law
 					const ColorRGB BRDF{ materials[closestHit.materialIndex]->Shade(closestHit, lightRayDirection.Normalized(), -rayDirection.Normalized()) };
@@ -114,8 +114,8 @@ void Renderer::Render(Scene* pScene) const
 			}
 
 			//Update Color in Buffer
-			//finalColor.MaxToOne();
-			applyToneMapping(finalColor);
+			finalColor.MaxToOne();
+			//applyToneMapping(finalColor);
 
 			m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
 				static_cast<uint8_t>(finalColor.r * 255),

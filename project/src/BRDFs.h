@@ -1,5 +1,6 @@
-#pragma once
+﻿#pragma once
 #include "Maths.h"
+#include "../libs/SDL2-2.30.3/include/SDL_hints.h"
 
 namespace dae
 {
@@ -66,13 +67,13 @@ namespace dae
 		static float NormalDistribution_GGX(const Vector3& n, const Vector3& h, float roughness)
 		{
 			//todo: W3
-			const float a{roughness * roughness};
-			const float a2{ a * a};
+			const float a{ Square(roughness) };
+			const float a2{ Square(a) };
 			const float nDothH{ Vector3::Dot(n, h) };
 
-			const float dom{ ((nDothH * nDothH) * (a2 - 1)) + 1 };
+			const float dom{ (Square(nDothH) * (a2 - 1)) + 1 };
 
-			const float result{ a2 / (PI * (dom * dom)) };
+			const float result{ a2 / (PI * Square(dom)) };
 			return result;
 		}
 
@@ -85,18 +86,17 @@ namespace dae
 		 */
 		static float GeometryFunction_SchlickGGX(const Vector3& n, const Vector3& v, float roughness)
 		{
-			//todo: W3
-			const float a{ roughness * roughness};
-			const float k = pow(a + 1, 2) / 8.f;
+			// n⋅v / ((n⋅v)*(1−k)+k)
 
-			const float nDotv{ Vector3::Dot(n,v) };
+			float a = Square(roughness);
+			float k = Square(a + 1.f) / 8.f;
 
-			const float result = nDotv / ((nDotv * (1.f - k)) + k);
+			float dot = std::max(Vector3::Dot(n, v), 0.f);
 
-			if (result < 0)
-				bool isFucked = true;
+			float nom = dot;
+			float denom = dot * (1 - k) + k;
 
-			return result;
+			return nom / denom;
 		}
 
 		/**
