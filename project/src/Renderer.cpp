@@ -87,7 +87,7 @@ void Renderer::Render(Scene* pScene) const
 						shadow = .5f;
 
 					const float ObserveredArea{ Vector3::Dot(closestHit.normal, lightRayDirection.Normalized()) };  // Lambert cosine law
-					const ColorRGB BRDF{ materials[closestHit.materialIndex]->Shade(closestHit, -lightRayDirection.Normalized(), rayDirection.Normalized()) };
+					const ColorRGB BRDF{ materials[closestHit.materialIndex]->Shade(closestHit, lightRayDirection.Normalized(), -rayDirection.Normalized()) };
 
 
 					switch (m_CurrentLightingMode)

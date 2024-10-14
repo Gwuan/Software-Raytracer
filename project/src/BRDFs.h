@@ -74,29 +74,7 @@ namespace dae
 
 			const float result{ a2 / (PI * (dom * dom)) };
 			return result;
-
-			//const float numerator{ roughness * roughness };
-
-			//const float nDotH{ std::max(Vector3::Dot(n, h), 0.0000001f) };
-
-			//float denominator = PI * pow(pow(nDotH, 2.f) * (numerator - 1.f) + 1.f, 2.f);
-
-			//denominator = std::max(denominator, 0.0000001f);
-
-			//return numerator / denominator;
-
-			//const float cosTheta{ Vector3::Dot(n, h) };
-
-			//if (cosTheta <= 0.f) // Prevent division by 0
-			//	return 0.f;
-
-			//const float tanTheta{ sqrt(1.f / (cosTheta * cosTheta) - 1.f) };
-
-			//const float alphaPower2{ roughness * roughness };
-
-			//return alphaPower2 / (PI * pow(cosTheta * (alphaPower2 + tanTheta * tanTheta), 2));
 		}
-
 
 		/**
 		 * \brief BRDF Geometry Function >> Schlick GGX (Direct Lighting + UE4 implementation - squared(roughness))
@@ -113,7 +91,7 @@ namespace dae
 
 			const float nDotv{ Vector3::Dot(n,v) };
 
-			const float result = nDotv / (nDotv * (1.f - k) + k);
+			const float result = nDotv / ((nDotv * (1.f - k)) + k);
 
 			if (result < 0)
 				bool isFucked = true;
