@@ -12,18 +12,15 @@ namespace dae
 		 */
 		static ColorRGB Lambert(float kd, const ColorRGB& cd)
 		{
-			//todo: W3
 			return (cd * kd) / PI;
 		}
 
 		static ColorRGB Lambert(const ColorRGB& kd, const ColorRGB& cd)
 		{
-			//todo: W3
 			return (cd * kd) / PI;
  		}
 
 		/**
-		 * \brief todo
 		 * \param ks Specular Reflection Coefficient
 		 * \param exp Phong Exponent
 		 * \param l Incoming (incident) Light Direction
@@ -33,7 +30,6 @@ namespace dae
 		 */
 		static ColorRGB Phong(float ks, float exp, const Vector3& l, const Vector3& v, const Vector3& n)
 		{
-			//todo: W3
 			const Vector3 reflect = l - (2 *Vector3::Dot(n, l)) * n ;
 			return ColorRGB( 1.f,1.f,1.f) * (ks * pow(Vector3::Dot(reflect, v), exp));
 		}
@@ -65,7 +61,6 @@ namespace dae
 		 */
 		static float NormalDistribution_GGX(const Vector3& n, const Vector3& h, float roughness)
 		{
-			//todo: W3
 			const float a{roughness * roughness};
 			const float a2{ a * a};
 			const float nDothH{ Vector3::Dot(n, h) };
@@ -85,7 +80,6 @@ namespace dae
 		 */
 		static float GeometryFunction_SchlickGGX(const Vector3& n, const Vector3& v, float roughness)
 		{
-			//todo: W3
 			const float a{ roughness * roughness};
 			const float k = pow(a + 1, 2) / 8.f;
 
