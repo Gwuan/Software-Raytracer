@@ -44,9 +44,8 @@ namespace dae
 		 */
 		static ColorRGB FresnelFunction_Schlick(const Vector3& h, const Vector3& v, const ColorRGB& f0)
 		{
-			//todo: W3
 			const ColorRGB f1{ 1.f, 1.f, 1.f };
-			const float dot{Vector3::Dot(h, v)};
+			const float dot{ Vector3::Dot(h, v) };
 
 
 			ColorRGB result = (f0 + ((f1 - f0) * pow( 1- dot,5)));
@@ -62,7 +61,6 @@ namespace dae
 		 */
 		static float NormalDistribution_GGX(const Vector3& n, const Vector3& h, float roughness)
 		{
-			//todo: W3
 			const float a{ Square(roughness) };
 			const float a2{ Square(a) };
 			const float nDothH{ Vector3::Dot(n, h) };
@@ -87,7 +85,7 @@ namespace dae
 			float a = Square(roughness);
 			float k = Square(a + 1.f) / 8.f;
 
-			float dot = std::max(Vector3::Dot(n, v), 0.f);
+			float dot = Vector3::Dot(n, v);
 
 			float nom = dot;
 			float denom = dot * (1 - k) + k;
