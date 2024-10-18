@@ -48,14 +48,16 @@ void Renderer::Render(Scene* pScene) const
 	const float widthF = static_cast<float>(m_Width);
 	const float heightF = static_cast<float>(m_Height);
 
+	const Matrix cameraToWorld{ camera.CalculateCameraToWorld() };
+	const float fovValue = camera.GetFovValue();
+
 	for (unsigned int px{}; px < m_Width; ++px)
 	{
-		float xCdn = ((((2 * (static_cast<float>(px) + 0.5f)) / widthF) - 1) * m_AspectRatio) * camera.GetFovValue();
+		float xCdn = ((((2 * (static_cast<float>(px) + 0.5f)) / widthF) - 1) * m_AspectRatio) * fovValue;
 		for (unsigned int py{}; py < m_Height; ++py)
 		{
 			// y Value for CDN
-			float yCdn = (1 - 2 * ((static_cast<float>(py) + 0.5f) / heightF)) * camera.GetFovValue();
-			const Matrix cameraToWorld{ camera.CalculateCameraToWorld() };
+			float yCdn = (1 - 2 * ((static_cast<float>(py) + 0.5f) / heightF)) * fovValue;
 
 			// Creating the rayDirection
 			Vector3 rayDirection{ xCdn, yCdn, 1 };
@@ -70,38 +72,38 @@ void Renderer::Render(Scene* pScene) const
 			pScene->GetClosestHit(viewRay, closestHit);
 			if (closestHit.didHit)
 			{
-				for (size_t i{ 0 }; i < lights.size(); ++i)
+				for (const Light& light : lights)
 				{
 					const Vector3 lightRayOrigin{ closestHit.origin + closestHit.normal * 0.0001f };
-					const Vector3 lightRayDirection{ LightUtils::GetDirectionToLight(lights[i], lightRayOrigin) };
+					const Vector3 lightRayDirection{ LightUtils::GetDirectionToLight(light, lightRayOrigin) };
+					const Vector3 lightDirNormalized{lightRayDirection.Normalized()};
 
 					const Ray lightRay{
 						lightRayOrigin,
-						lightRayDirection.Normalized(),
+						lightDirNormalized,
 						0.0001f,
 						lightRayDirection.Magnitude()
 					};
 
-					float shadow{ 1.f }; // 1 for no shadow
-					if (pScene->DoesHit(lightRay) && m_ShadowsEnabled)
-						shadow = .6f;
+					// 1 for no shadow
+					const float shadow = (pScene->DoesHit(lightRay) && m_ShadowsEnabled) ? 0.6f : 1.f; 
 
-					const float ObserveredArea{ Vector3::Dot(closestHit.normal, lightRayDirection.Normalized()) };  // Lambert cosine law
-					const ColorRGB BRDF{ materials[closestHit.materialIndex]->Shade(closestHit, lightRayDirection.Normalized(), -rayDirection.Normalized()) };
+					const float ObserveredArea{ Vector3::Dot(closestHit.normal, lightDirNormalized) };  // Lambert cosine law
+					const ColorRGB BRDF{ materials[closestHit.materialIndex]->Shade(closestHit, lightDirNormalized, -rayDirection.Normalized()) };
 
 
 					switch (m_CurrentLightingMode)
 					{
 					case LightingMode::Combined:
 						if (ObserveredArea > 0)
-							finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin) * BRDF * ObserveredArea;
+							finalColor += LightUtils::GetRadiance(light, closestHit.origin) * BRDF * ObserveredArea;
 						break;
 					case LightingMode::ObservedArea:
 						if (ObserveredArea > 0)
 							finalColor += ColorRGB(1,1,1) * ObserveredArea;	
 						break;
 					case LightingMode::Radiance:
-						finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin);
+						finalColor += LightUtils::GetRadiance(light, closestHit.origin);
 						break;
 					case LightingMode::BRDF:
 						finalColor += BRDF;
