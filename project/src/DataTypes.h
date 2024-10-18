@@ -4,7 +4,6 @@
 
 #include "Maths.h"
 
-
 namespace dae
 {
 #pragma region GEOMETRY
@@ -124,20 +123,53 @@ namespace dae
 
 		void CalculateNormals()
 		{
-			throw std::runtime_error("Not Implemented Yet");
+			for(size_t i{ 0 }; i < indices.size(); i += 3)
+			{
+				const int v0Index = indices[i];
+				const int v1Index = indices[i + 1];
+				const int v2Index = indices[i + 2];
+
+				normals.emplace_back(Vector3::Cross(positions[v1Index] - positions[v0Index], positions[v2Index] - positions[v0Index]).Normalized());
+			}
 		}
 
 		void UpdateTransforms()
 		{
-			throw std::runtime_error("Not Implemented Yet");
-			//Calculate Final Transform 
-			//const auto finalTransform = ...
+			const auto transform = scaleTransform * rotationTransform * translationTransform;
 
-			//Transform Positions (positions > transformedPositions)
-			//...
+			if (transformedPositions.size() == 0)
+			{
+				transformedPositions.reserve(positions.size());
+				for (size_t i{ 0 }; i < positions.size(); ++i)
+				{
+					transformedPositions.emplace_back(transform.TransformPoint(positions[i]));
+				}
 
-			//Transform Normals (normals > transformedNormals)
-			//...
+			}
+			else
+			{
+				for (size_t i{ 0 }; i < positions.size(); ++i)
+				{
+					transformedPositions[i] = transform.TransformPoint(positions[i]);
+				}
+
+			}
+
+			if (transformedNormals.size() == 0)
+			{
+				transformedNormals.reserve(normals.size());
+				for (size_t i{ 0 }; i < normals.size(); ++i)
+				{
+					transformedNormals.emplace_back(transform.TransformVector(normals[i]));
+				}
+			}
+			else
+			{
+				for (size_t i{ 0 }; i < normals.size(); ++i)
+				{
+					transformedNormals[i] = transform.TransformVector(normals[i]);
+				}
+			}
 		}
 	};
 #pragma endregion
