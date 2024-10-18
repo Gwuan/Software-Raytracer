@@ -4,6 +4,8 @@
 
 #include "Matrix.h"
 
+#include "MathHelpers.h"
+
 namespace dae {
 	Matrix::Matrix(const Vector3& xAxis, const Vector3& yAxis, const Vector3& zAxis, const Vector3& t) :
 		Matrix({ xAxis, 0 }, { yAxis, 0 }, { zAxis, 0 }, { t, 1 })
@@ -105,9 +107,9 @@ namespace dae {
 	{
 		Matrix result;
 
-		result.data[0] = { 0, 0, 0, 0 };
-		result.data[1] = { 0, 0, 0, 0 };
-		result.data[2] = { 0, 0, 0, 0 };
+		result.data[0] = { 1, 0, 0, 0 };
+		result.data[1] = { 0, 1, 0, 0 };
+		result.data[2] = { 0, 0, 1, 0 };
 		result.data[3] = { x, y, z, 1 };
 
 		return result;
@@ -120,29 +122,32 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationX(float pitch)
 	{
+		pitch *= (PI / 180.f);
 		Matrix result;
 		result.data[0] = { 1, 0, 0, 0 };
 		result.data[1] = { 0, cos(pitch), -sin(pitch), 0 };
 		result.data[2] = { 0, sin(pitch), cos(pitch), 0 };
-		result.data[3] = { 3, 0, 0, 1 };
+		result.data[3] = { 0, 0, 0, 1 };
 		
 		return result;
 	}
 
 	Matrix Matrix::CreateRotationY(float yaw)
 	{
+		yaw *= (PI / 180.f);
 		Matrix result;
 
 		result.data[0] = { cos(yaw), 0, -sin(yaw), 0 };
 		result.data[1] = { 0, 1, 0, 0 };
 		result.data[2] = { sin(yaw), 0, cos(yaw), 0 };
-		result.data[3] = { 0, 3, 0, 1 };
+		result.data[3] = { 0, 0, 0, 1 };
 
 		return result;
 	}
 
 	Matrix Matrix::CreateRotationZ(float roll)
 	{
+		roll *= (PI / 180.f);
 		Matrix result;
 
 		result.data[0] = { cos(roll), sin(roll), 0, 0 };
