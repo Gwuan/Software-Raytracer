@@ -122,7 +122,6 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationX(float pitch)
 	{
-		pitch *= (PI / 180.f);
 		Matrix result;
 		result.data[0] = { 1, 0, 0, 0 };
 		result.data[1] = { 0, cos(pitch), -sin(pitch), 0 };
@@ -134,7 +133,6 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationY(float yaw)
 	{
-		yaw *= (PI / 180.f);
 		Matrix result;
 
 		result.data[0] = { cos(yaw), 0, -sin(yaw), 0 };
@@ -147,7 +145,6 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationZ(float roll)
 	{
-		roll *= (PI / 180.f);
 		Matrix result;
 
 		result.data[0] = { cos(roll), sin(roll), 0, 0 };
