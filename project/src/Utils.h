@@ -11,47 +11,40 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			const Vector3 SphereRayVec{ ray.origin - sphere.origin };
+			const Vector3 SphereRayVec{ sphere.origin - ray.origin };
 
 			const float a = ray.direction.SqrMagnitude();
-			const float b = Vector3::Dot(ray.direction, SphereRayVec) * 2;
+			const float b = Vector3::Dot(ray.direction, SphereRayVec);
 			const float c = SphereRayVec.SqrMagnitude() - (sphere.radius * sphere.radius);
 
-			const float b2 = pow(b, 2);
-			const float _4ac = 4.f * a * c;
-			const float discriminant = b2 - _4ac;
+			const float discriminant = Square(b) - (a * c);
 
-			if (discriminant > 0)
-			{
-				const float squareD = sqrt(discriminant);
-				float t{};
-				t = (-b - squareD) / (2 * a);
-
-				if (t < ray.min || t > ray.max)
-				{
-					t = (-b + squareD) / (2 * a);
-					if (t < ray.min || t > ray.max)
-						return false;
-				}
-
-				if(!ignoreHitRecord)
-				{
-					const Vector3 hitLocation{ ray.origin + (ray.direction * t) };
-					const Vector3 hitToCenter{ hitLocation - sphere.origin };
-
-					hitRecord.didHit = true;
-					hitRecord.origin = hitLocation;
-					hitRecord.materialIndex = sphere.materialIndex;
-					hitRecord.t = t;
-					hitRecord.normal = hitToCenter.Magnitude() > 0 ? hitToCenter.Normalized() : Vector3(0,0,0);
-				}
-
-				return true;
-			}
-			else
-			{
+			if (discriminant <= 0)
 				return false;
+
+			const float squareD = sqrt(discriminant);
+			float t = (b - squareD) / a;
+
+			if (t < ray.min || t > ray.max)
+			{
+				t = (b + squareD) / a;
+				if (t < ray.min || t > ray.max)
+					return false;
 			}
+
+			if(!ignoreHitRecord)
+			{
+				const Vector3 hitLocation{ ray.origin + (ray.direction * t) };
+				const Vector3 hitToCenter{ hitLocation - sphere.origin };
+
+				hitRecord.didHit = true;
+				hitRecord.origin = hitLocation;
+				hitRecord.materialIndex = sphere.materialIndex;
+				hitRecord.t = t;
+				hitRecord.normal = hitToCenter.Magnitude() > 0 ? hitToCenter.Normalized() : Vector3(0,0,0);
+			}
+
+			return true;
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
@@ -91,6 +84,29 @@ namespace dae
 		//TRIANGLE HIT-TESTS
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
+
+			const Vector3 vertices[]{triangle.v0, triangle.v1, triangle.v2};
+
+			const Vector3 a = triangle.v1 - triangle.v0;
+			const Vector3 b = triangle.v2 - triangle.v0;
+
+			const Vector3 normal = Vector3::Cross(a, b).Normalized();
+
+			if(AreEqual(Vector3::Dot(normal, ray.direction), 0.f))
+				return false;
+
+			const Vector3 L = triangle.v0 - ray.origin;
+
+			float t = Vector3::Dot(L, normal) / Vector3::Dot(ray.direction, normal);
+
+			if (t < ray.min || t > ray.max)
+				return false;
+
+			const Vector3 point = ray.origin + ray.direction * t;
+
+			for (const Vector3& vertex : vertices)
+
+
 			//todo W5
 			throw std::runtime_error("Not Implemented Yet");
 			return false;
