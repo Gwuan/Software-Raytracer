@@ -2,11 +2,17 @@
 
 #include <cstdint>
 
+// Forwarding structs
 struct SDL_Window;
 struct SDL_Surface;
 
+
+
+
 namespace dae
 {
+	struct Matrix;
+	class Vector3;
 	class Scene;
 
 	class Renderer final
@@ -21,6 +27,7 @@ namespace dae
 		Renderer& operator=(Renderer&&) noexcept = delete;
 
 		void Render(Scene* pScene) const;
+		void RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float aspectRatio, const Matrix cameraToWorld, const Vector3 cameraOrigin) const;
 		bool SaveBufferToImage() const;
 
 		void CycleLightingMode();
