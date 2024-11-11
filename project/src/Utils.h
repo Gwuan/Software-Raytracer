@@ -107,8 +107,13 @@ namespace dae
 		//TRIANGLE HIT-TESTS
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			const float normDotDirect = Vector3::Dot(triangle.normal, ray.direction);
+			const Vector3 a = triangle.v1 - triangle.v0;
+			const Vector3 b = triangle.v2 - triangle.v0;
+			const Vector3 normal = Vector3::Cross(a, b);
 
+			const float normDotDirect = Vector3::Dot(normal, ray.direction);
+
+			
 			// Inverse if ignoreHitRecord is true,
 			// ignoreHitRecord is mostly used for shadows
 			if(ignoreHitRecord)
@@ -124,6 +129,10 @@ namespace dae
 					if (normDotDirect > 0.f)
 						return false;
 					break;
+				case TriangleCullMode::NoCulling:
+					if(AreEqual(normDotDirect, 0.f))
+						return false;
+					break;
 				}
 			}
 			else
@@ -135,31 +144,33 @@ namespace dae
 						return false;
 					break;
 				case TriangleCullMode::FrontFaceCulling:
-					if (normDotDirect < 0.f)
+					if (normDotDirect <=0.f)
+						return false;
+					break;
+				case TriangleCullMode::NoCulling:
+					if(AreEqual(normDotDirect, 0.f))
 						return false;
 					break;
 				}
 			}
 
-			if(AreEqual(normDotDirect, 0.f))
-				return false;
-
 			const Vector3 L = triangle.v0 - ray.origin;
 
-			float t = Vector3::Dot(L, triangle.normal) / 
-				Vector3::Dot(ray.direction, triangle.normal);
+			float t = Vector3::Dot(L, normal) / normDotDirect;
 
 			if (t < ray.min || t > ray.max)
 				return false;
 
-			const Vector3 point = ray.origin + ray.direction * t;
+			const Vector3 point = ray.origin + (ray.direction * t);
 
 			const Vector3 vertices[]{triangle.v0, triangle.v1, triangle.v2};
 			for (size_t i{0}; i < std::size(vertices); i++)
 			{
-				const Vector3 e = vertices[(i + 1) % std::size(vertices)] - vertices[i];
-				const Vector3 pVector = point -  vertices[i];
-				if (Vector3::Dot(Vector3::Cross(e, pVector), triangle.normal) < 0)
+				const uint32_t nextIdx = (i + 1) % std::size(vertices);
+				const Vector3 e = vertices[nextIdx] - vertices[i];
+				const Vector3 pVector = point - vertices[i];
+
+				if (Vector3::Dot(Vector3::Cross(e, pVector), normal) < 0.f)
 					return false;
 			}
 
@@ -169,6 +180,7 @@ namespace dae
 				hitRecord.materialIndex = triangle.materialIndex;
 				hitRecord.didHit = true;
 				hitRecord.origin = point;
+				//hitRecord.normal = normal;
 				hitRecord.normal = triangle.normal;
 			}
 
@@ -184,25 +196,53 @@ namespace dae
 #pragma region TriangeMesh HitTest
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			for (size_t i{0}; i < mesh.indices.size(); i += 3)
 			// Slabtest first
-
+			if(!SlabTest_TriangleMesh(mesh, ray))
 			{
-				Triangle temp{
-					mesh.transformedPositions[mesh.indices[i]],
-					mesh.transformedPositions[mesh.indices[i + 1]],
-					mesh.transformedPositions[mesh.indices[i + 2]],
-					mesh.transformedNormals[i]
-				};
-
-				temp.cullMode = mesh.cullMode;
-				temp.materialIndex = mesh.materialIndex;
-
-				if (HitTest_Triangle(temp, ray, hitRecord))
-					return true;
+				return false;
 			}
 
-			return false;
+			const std::vector<int>& indices = mesh.indices;
+
+			Triangle temp{};
+			temp.cullMode = mesh.cullMode;
+			temp.materialIndex = mesh.materialIndex;
+
+			HitRecord currentHit{};
+			HitRecord closestHit{};
+
+			for (size_t i{}; i < mesh.indices.size(); i += 3)
+			{
+				const int v0Index = indices[i];
+				const int v1Index = indices[i + 1];
+				const int v2Index = indices[i + 2];
+				temp.v0 = mesh.transformedPositions[v0Index];
+				temp.v1 = mesh.transformedPositions[v1Index];
+				temp.v2 = mesh.transformedPositions[v2Index];
+
+				if(i != 0)
+					temp.normal = mesh.transformedNormals[i / 3];
+				else
+					temp.normal = mesh.transformedNormals[i];
+
+
+
+				if(HitTest_Triangle(temp, ray, currentHit, ignoreHitRecord))
+				{
+					if(!ignoreHitRecord)
+					{
+						if(currentHit.t < hitRecord.t)
+							hitRecord = currentHit;
+					}
+					else
+					{
+						return true;
+					}
+				}
+			}
+
+
+			return hitRecord.didHit;
 		}
 
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)

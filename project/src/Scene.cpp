@@ -325,8 +325,8 @@ namespace dae {
 
 		pMesh->Scale({ .7f, .7f, .7f });
 		pMesh->Translate({ 0.f, 1.f, 0.f });
+		pMesh->UpdateAABB();
 		pMesh->UpdateTransforms();
-
 
 		// Lights
 		AddPointLight(Vector3{ 0.f, 5.f, 5.f }, 50.f, ColorRGB{ 1.f, .61f, .45f });  // Backlight
@@ -383,16 +383,19 @@ namespace dae {
 		m_Meshes[0] = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matLambert_White);
 		m_Meshes[0]->AppendTriangle(baseTriangle, true);
 		m_Meshes[0]->Translate({ -1.75f, 4.5f, 0.f });
+		m_Meshes[0]->UpdateAABB();
 		m_Meshes[0]->UpdateTransforms();
 
 		m_Meshes[1] = AddTriangleMesh(TriangleCullMode::FrontFaceCulling, matLambert_White);
 		m_Meshes[1]->AppendTriangle(baseTriangle, true);
 		m_Meshes[1]->Translate({ 0.f, 4.5f, 0.f });
+		m_Meshes[1]->UpdateAABB();
 		m_Meshes[1]->UpdateTransforms();
 
 		m_Meshes[2] = AddTriangleMesh(TriangleCullMode::NoCulling, matLambert_White);
 		m_Meshes[2]->AppendTriangle(baseTriangle, true);
 		m_Meshes[2]->Translate({ 1.75f, 4.5f, 0.f });
+		m_Meshes[2]->UpdateAABB();
 		m_Meshes[2]->UpdateTransforms();
 
 		AddPointLight(Vector3{ 0.f, 5.f, 5.f }, 50.f, ColorRGB{ 1.f, .61f, .45f });  // Backlight
@@ -431,14 +434,12 @@ namespace dae {
 			m_pBunny->normals,
 			m_pBunny->indices);
 
-
-
-
 		m_pBunny->Translate({0.f, 0.f, 0.f});
 		m_pBunny->RotateY(180.f);
 		m_pBunny->Scale({2.f, 2.f, 2.f});
-		m_pBunny->UpdateTransforms();
 
+		m_pBunny->UpdateAABB();
+		m_pBunny->UpdateTransforms();
 
 		// Planes
 		AddPlane(Vector3{ 0.f, 0.f, 10.f }, Vector3{ 0.f, 0.f, -1.f }, matLambert_GrayBlue);  // BACK
@@ -456,6 +457,54 @@ namespace dae {
 	}
 
 #pragma endregion
+
+
+	void Scene_Debug::Initialize()
+	{
+		m_Camera.origin = { 0.f, 3.f, -9.f };
+		m_Camera.SetFovAngle(45.f);
+
+		const auto matLambert_GrayBlue = AddMaterial(new Material_Lambert({ .49f, .57f, .57f }, 1.f));
+		const auto matLambert_White = AddMaterial(new Material_Lambert(colors::Red, 1.f));
+
+
+		m_pDebugModel = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matLambert_White);
+		Utils::ParseOBJ("Resources/lowpoly_bunny.obj",
+			m_pDebugModel->positions,
+			m_pDebugModel->normals,
+			m_pDebugModel->indices);
+
+		m_pDebugModel->Translate({0.f, 2.f, 0.f});
+		// m_pDebugModel->RotateY(180.f);
+		// m_pDebugModel->Scale({2.f, 2.f, 2.f});
+
+		m_pDebugModel->UpdateAABB();
+		m_pDebugModel->UpdateTransforms();
+
+		// Planes
+		AddPlane(Vector3{ 0.f, 0.f, 10.f }, Vector3{ 0.f, 0.f, -1.f }, matLambert_GrayBlue);  // BACK
+		AddPlane(Vector3{ 0.f, 0.f, 0.f }, Vector3{ 0.f, 1.f, 0.f }, matLambert_GrayBlue);  // BOTTOM
+		AddPlane(Vector3{ 0.f, 10.f, 0.f }, Vector3{ 0.f, -1.f, 0.f }, matLambert_GrayBlue);  // TOP
+		AddPlane(Vector3{ 5.f, 0.f, 0.f }, Vector3{ -1.f, 0.f, 0.f }, matLambert_GrayBlue);  // RIGHT
+		AddPlane(Vector3{ -5.f, 0.f, 0.f }, Vector3{ 1.f, 0.f, 0.f }, matLambert_GrayBlue);  // LEFT
+
+
+		// Light
+		AddPointLight(Vector3{ 0.f, 5.f, 5.f }, 50.f, ColorRGB{ 1.f, .61f, .45f });  // Backlight
+		AddPointLight(Vector3{ -2.5f, 5.f, -5.f }, 70.f, ColorRGB{ 1.f, 0.8f, .45f });  // Front Light Left
+		AddPointLight(Vector3{ 2.5f, 2.5f, -5.f }, 50.f, ColorRGB{ .34f, .47f, .68f });
+
+	}
+
+	void Scene_Debug::Update(dae::Timer* pTimer)
+	{
+		Scene::Update(pTimer);
+		// const auto yawAngle = (cos(pTimer->GetTotal()) + 1.f) / 2.f * PI_2;
+		// 
+		// 
+		// m_pDebugModel->RotateY(yawAngle);
+		// m_pDebugModel->UpdateTransforms();
+	}
 
 
 }

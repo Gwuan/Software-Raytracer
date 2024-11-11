@@ -182,6 +182,23 @@ namespace dae
 		TriangleMesh* m_pBunny = nullptr;
 	};
 
+	class Scene_Debug final : public Scene
+	{
+	public:
+		Scene_Debug() = default;
+		~Scene_Debug() override = default;
+
+		Scene_Debug(const Scene_Debug&) = delete;
+		Scene_Debug(Scene_Debug&&) noexcept = delete;
+		Scene_Debug& operator=(const Scene_Debug&) = delete;
+		Scene_Debug& operator=(Scene_Debug&&) noexcept = delete;
+
+		void Initialize() override;
+		void Update(dae::Timer* pTimer) override;
+
+	private:
+		TriangleMesh* m_pDebugModel = nullptr;
+	};
 
 
 }

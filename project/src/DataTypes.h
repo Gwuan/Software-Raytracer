@@ -1,4 +1,5 @@
 #pragma once
+#include <complex>
 #include <stdexcept>
 #include <vector>
 
@@ -146,27 +147,39 @@ namespace dae
 
 		void UpdateTransforms()
 		{
-			const auto finalTransform = scaleTransform * rotationTransform * translationTransform;
+			const Matrix finalTransform = scaleTransform * rotationTransform * translationTransform;
 
-			if (transformedPositions.size() == 0)
+			UpdatePositions(finalTransform);
+
+			UpdateNormals(finalTransform);
+
+
+			// Update AABB
+			UpdateTransformedAABB(finalTransform);
+		}
+
+		void UpdatePositions(const Matrix& finalTransfrom)
+		{
+			if (transformedPositions.empty())
 			{
 				transformedPositions.reserve(positions.size());
 				for (size_t i{ 0 }; i < positions.size(); ++i)
 				{
-					transformedPositions.emplace_back(finalTransform.TransformPoint(positions[i]));
+					transformedPositions.emplace_back(finalTransfrom.TransformPoint(positions[i]));
 				}
-
 			}
 			else
 			{
 				for (size_t i{ 0 }; i < positions.size(); ++i)
 				{
-					transformedPositions[i] = finalTransform.TransformPoint(positions[i]);
+					transformedPositions[i] = finalTransfrom.TransformPoint(positions[i]);
 				}
-
 			}
+		}
 
-			if (transformedNormals.size() == 0)
+		void UpdateNormals(const Matrix& finalTransform)
+		{
+			if (transformedNormals.empty())
 			{
 				transformedNormals.reserve(normals.size());
 				for (size_t i{ 0 }; i < normals.size(); ++i)
@@ -176,20 +189,16 @@ namespace dae
 			}
 			else
 			{
-				for (size_t i{ 0 }; i < normals.size(); ++i)
+				for (size_t i{ 0 }; i < normals.size(); i++)
 				{
-					transformedNormals[i] = finalTransform.TransformVector(normals[i]);
+					transformedNormals[i] = finalTransform.TransformVector(normals[i].Normalized());
 				}
 			}
-
-
-			// Update AABB
-			UpdateTransformedAABB(finalTransform);
 		}
+
 
 		void UpdateAABB()
 		{
-			// TODO: Update AABB logic
 			if(positions.size() > 0)
 			{
 				minAABB = positions[0];
