@@ -8,6 +8,8 @@ namespace dae
 {
 	namespace GeometryUtils
 	{
+		inline bool SlabTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)
+		}
 #pragma region Sphere HitTest
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
@@ -163,6 +165,8 @@ namespace dae
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			for (size_t i{0}; i < mesh.indices.size(); i += 3)
+			// Slabtest first
+
 			{
 				Triangle temp{
 					mesh.transformedPositions[mesh.indices[i]],
