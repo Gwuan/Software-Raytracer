@@ -76,85 +76,113 @@ void Renderer::Render(Scene* pScene) const
 	SDL_UpdateWindowSurface(m_pWindow);
 }
 
+struct vector2
+{
+	float x;
+	float y;
+};
+
 void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float aspectRatio, const Matrix cameraToWorld, const Vector3 cameraOrigin) const
 {
 	auto materials{pScene->GetMaterials()};
 
 	const uint32_t px{ pixelIndex % m_Width }, py{ pixelIndex / m_Width };
 
-	float rx{px + 0.5f}, ry{ py + 0.5f };
-	float cx{ (2 * (rx / float(m_Width)) - 1) * aspectRatio * fov };
-	float cy{ (1 - (2 * (ry / float(m_Height)))) * fov };
+	const uint32_t sampleCount{ 4 };
 
+	vector2 samples[sampleCount]{};
+	uint32_t sqrtSample = sqrt(sampleCount);
 
-	// inside the double loop
-	Vector3 rayDirection{ cx, cy, 1 };
-	rayDirection = cameraToWorld.TransformVector(rayDirection);
-	rayDirection.Normalize();
-
-	Ray viewRay{ cameraOrigin, rayDirection };
+	for (uint32_t y{}; y < sqrtSample; y++)
+	{
+		const float tempY = (y + .5f) / sqrtSample;
+		for (uint32_t x{}; x < sqrtSample; x++)
+		{
+			const float tempX = (x + .5f) / sqrtSample;
+			samples[x + (y * sqrtSample)] = { tempX, tempY };
+		}
+	}
 
 	ColorRGB finalColor{};
-
-	HitRecord closestHit{};
-	pScene->GetClosestHit(viewRay, closestHit);
-
-	const auto& lights = pScene->GetLights();
-	if (closestHit.didHit)
+	for(const auto& s : samples)
 	{
-		for (const Light& light : lights)
+		ColorRGB currentSampleColor{};
+
+		float rx{px + s.x}, ry{ py + s.y };
+		float cx{ (2 * (rx / float(m_Width)) - 1) * aspectRatio * fov };
+		float cy{ (1 - (2 * (ry / float(m_Height)))) * fov };
+
+		// inside the double loop
+		Vector3 rayDirection{ cx, cy, 1 };
+		rayDirection = cameraToWorld.TransformVector(rayDirection);
+		rayDirection.Normalize();
+
+		Ray viewRay{ cameraOrigin, rayDirection };
+
+
+		HitRecord closestHit{};
+		pScene->GetClosestHit(viewRay, closestHit);
+
+		const auto& lights = pScene->GetLights();
+		if (closestHit.didHit)
 		{
-			const Vector3 lightRayOrigin{ closestHit.origin + closestHit.normal * 0.0001f };
-			const Vector3 lightRayDirection{ LightUtils::GetDirectionToLight(light, lightRayOrigin) };
-			const Vector3 lightDirNormalized{lightRayDirection.Normalized()};
-
-			const Ray lightRay
+			for (const Light& light : lights)
 			{
-				lightRayOrigin,
-				lightDirNormalized,
-				0.0001f,
-				lightRayDirection.Magnitude()
-			};
+				ColorRGB currentLightColor{};
 
-			// 1 for no shadow
-			const float shadow = (pScene->DoesHit(lightRay) && m_ShadowsEnabled) ? 0.6f : 1.f; 
+				const Vector3 lightRayOrigin{ closestHit.origin + closestHit.normal * 0.0001f };
+				const Vector3 lightRayDirection{ LightUtils::GetDirectionToLight(light, lightRayOrigin) };
+				const Vector3 lightDirNormalized{ lightRayDirection.Normalized() };
 
-			const float ObserveredArea{ Vector3::Dot(closestHit.normal, lightDirNormalized) };  // Lambert cosine law
-			const ColorRGB BRDF{ materials[closestHit.materialIndex]->Shade(closestHit, lightDirNormalized, -rayDirection.Normalized()) };
+				const Ray lightRay
+				{
+					lightRayOrigin,
+					lightDirNormalized,
+					0.0001f,
+					lightRayDirection.Magnitude()
+				};
+
+				// 1 for no shadow
+				const float shadow = (pScene->DoesHit(lightRay) && m_ShadowsEnabled) ? 0.6f : 1.f;
+
+				const float ObserveredArea{ Vector3::Dot(closestHit.normal, lightDirNormalized) };  // Lambert cosine law
+				const ColorRGB BRDF{ materials[closestHit.materialIndex]->Shade(closestHit, lightDirNormalized, -rayDirection.Normalized()) };
 
 
-			switch (m_CurrentLightingMode)
-			{
-			case LightingMode::Combined:
-				if (ObserveredArea > 0)
-					finalColor += LightUtils::GetRadiance(light, closestHit.origin) * BRDF * ObserveredArea;
-				break;
-			case LightingMode::ObservedArea:
-				if (ObserveredArea > 0)
-					finalColor += ColorRGB(1,1,1) * ObserveredArea;	
-				break;
-			case LightingMode::Radiance:
-				finalColor += LightUtils::GetRadiance(light, closestHit.origin);
-				break;
-			case LightingMode::BRDF:
-				finalColor += BRDF;
-				break;
+				switch (m_CurrentLightingMode)
+				{
+				case LightingMode::Combined:
+					if (ObserveredArea > 0)
+						currentLightColor += LightUtils::GetRadiance(light, closestHit.origin) * BRDF * ObserveredArea;
+					break;
+				case LightingMode::ObservedArea:
+					if (ObserveredArea > 0)
+						currentLightColor += ColorRGB(1, 1, 1) * ObserveredArea;
+					break;
+				case LightingMode::Radiance:
+					currentLightColor += LightUtils::GetRadiance(light, closestHit.origin);
+					break;
+				case LightingMode::BRDF:
+					currentLightColor += BRDF;
+					break;
+				}
+
+				currentLightColor *= shadow;
+				currentSampleColor += currentLightColor;
 			}
-
-
-			finalColor *= shadow;
 		}
 
-		finalColor.MaxToOne();
-
-		// std::cout << px << ", " << py << std::endl;
-		// std::cout << "bufferPixelIndex: " << px + (py * m_Width) << std::endl;
-		m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
-			static_cast<uint8_t>(finalColor.r * 255),
-			static_cast<uint8_t>(finalColor.g * 255),
-			static_cast<uint8_t>(finalColor.b * 255));
-
+		finalColor += (currentSampleColor / sampleCount);
 	}
+
+	finalColor.MaxToOne();
+
+	// std::cout << px << ", " << py << std::endl;
+	// std::cout << "bufferPixelIndex: " << px + (py * m_Width) << std::endl;
+	m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
+		static_cast<uint8_t>(finalColor.r * 255),
+		static_cast<uint8_t>(finalColor.g * 255),
+		static_cast<uint8_t>(finalColor.b * 255));
 }
 
 bool Renderer::SaveBufferToImage() const
