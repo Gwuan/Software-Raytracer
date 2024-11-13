@@ -167,24 +167,31 @@ namespace dae {
 #pragma region SCENE W1
 	void Scene_W1::Initialize()
 	{
-		//default: Material id0 >> SolidColor Material (RED)
-		constexpr unsigned char matId_Solid_Red = 0;
+		m_Camera.origin = { 0.f, 3.f, -9.f };
+		m_Camera.SetFovAngle(45.f);
+
+		// Sphere Materials
+		const unsigned char matId_Solid_Red = AddMaterial(new Material_SolidColor{ colors::Red });
 		const unsigned char matId_Solid_Blue = AddMaterial(new Material_SolidColor{ colors::Blue });
 
+		// Plane Materials
 		const unsigned char matId_Solid_Yellow = AddMaterial(new Material_SolidColor{ colors::Yellow });
 		const unsigned char matId_Solid_Green = AddMaterial(new Material_SolidColor{ colors::Green });
 		const unsigned char matId_Solid_Magenta = AddMaterial(new Material_SolidColor{ colors::Magenta });
 
 		//Spheres
-		AddSphere({ -25.f, 0.f, 100.f }, 50.f, matId_Solid_Red);
-		AddSphere({ 25.f, 0.f, 100.f }, 50.f, matId_Solid_Blue);
+		AddSphere({ -2.5f, 0.f, 1.f }, 5.f, matId_Solid_Red);
+		AddSphere({ 2.5f, 0.f, 1.f }, 5.f, matId_Solid_Blue);
 
 		//Plane
-		AddPlane({ -75.f, 0.f, 0.f }, { 1.f, 0.f,0.f }, matId_Solid_Green);
-		AddPlane({ 75.f, 0.f, 0.f }, { -1.f, 0.f,0.f }, matId_Solid_Green);
-		AddPlane({ 0.f, -75.f, 0.f }, { 0.f, 1.f,0.f }, matId_Solid_Yellow);
-		AddPlane({ 0.f, 75.f, 0.f }, { 0.f, -1.f,0.f }, matId_Solid_Yellow);
-		AddPlane({ 0.f, 0.f, 125.f }, { 0.f, 0.f,-1.f }, matId_Solid_Magenta);
+		AddPlane({ -7.5f, 0.f, 0.f }, { 1.f, 0.f,0.f }, matId_Solid_Green);
+		AddPlane({ 7.5f, 0.f, 0.f }, { -1.f, 0.f,0.f }, matId_Solid_Green);
+		AddPlane({ 0.f, -7.5f, 0.f }, { 0.f, 1.f,0.f }, matId_Solid_Yellow);
+		AddPlane({ 0.f, 7.5f, 0.f }, { 0.f, -1.f,0.f }, matId_Solid_Yellow);
+		AddPlane({ 0.f, 0.f, 12.5f }, { 0.f, 0.f,-1.f }, matId_Solid_Magenta);
+
+		// Lights
+		AddPointLight({ 0.f, 5.f, -5.f }, 70.f, colors::White);
 	}
 #pragma endregion
 
@@ -194,10 +201,11 @@ namespace dae {
 		m_Camera.origin = { 0.f, 3.f, -9.f };
 		m_Camera.SetFovAngle(45.f);
 
-		// Default: Material id0 >> SolidColor Material (RED)
-		constexpr unsigned char matId_Solid_Red = 0;
+		// Sphere Materials
+		const unsigned char matId_Solid_Red = AddMaterial(new Material_SolidColor{ colors::Red });
 		const unsigned char matId_Solid_Blue = AddMaterial(new Material_SolidColor{ colors::Blue });
 
+		// Plane materials
 		const unsigned char matId_Solid_Yellow = AddMaterial(new Material_SolidColor{ colors::Yellow });
 		const unsigned char matId_Solid_Green = AddMaterial(new Material_SolidColor{ colors::Green });
 		const unsigned char matId_Solid_Magenta = AddMaterial(new Material_SolidColor{ colors::Magenta });
