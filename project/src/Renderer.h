@@ -37,23 +37,11 @@ namespace dae
 		void CycleLightingMode();
 		void ToggleShadows() { m_ShadowsEnabled = !m_ShadowsEnabled; }
 
-		void IncreaseMSAA()
-		{
-			if(m_SampleAmount * 4 > m_MaxSampleAmount)
-				return;
+		// Anti Aliassing
+		void IncreaseMSAA();
+		void DecreaseMSAA();
+		uint32_t GetSampleAmount() const { return m_SampleAmount; }
 
-			m_SampleAmount *= 4;
-			CalculateSamplePositions();
-		}
-
-		void DecreaseMSAA()
-		{
-			if(m_SampleAmount / 4 < m_minSampleAmount)
-				return;
-
-			m_SampleAmount /= 4;
-			CalculateSamplePositions();
-		}
 
 	private:
 

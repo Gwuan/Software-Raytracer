@@ -30,19 +30,6 @@ Renderer::Renderer(SDL_Window * pWindow) :
 	CalculateSamplePositions();
 }
 
-void applyToneMapping(ColorRGB& color) {
-	// Calculate the luminance
-	float luminance = 0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b;
-
-	// Reinhard tone mapping
-	float mappedValue = luminance / (luminance + 1.0f);
-
-	// Apply the tone mapping to each channel
-	color.r = std::min(color.r / (mappedValue + 1.0f), 1.0f);
-	color.g = std::min(color.g / (mappedValue + 1.0f), 1.0f);
-	color.b = std::min(color.b / (mappedValue + 1.0f), 1.0f);
-}
-
 void Renderer::Render(Scene* pScene) const
 {
 	Camera& camera = pScene->GetCamera();
@@ -173,4 +160,22 @@ void Renderer::CycleLightingMode()
 {
 	std::cout << static_cast<int>(m_CurrentLightingMode) << std::endl;
 	m_CurrentLightingMode = LightingMode((static_cast<int>(m_CurrentLightingMode) + 1) % static_cast<int>(LightingMode::TOTAL_MODES));
+}
+
+void Renderer::IncreaseMSAA()
+{
+	if(m_SampleAmount * 4 > m_MaxSampleAmount)
+		return;
+
+	m_SampleAmount *= 4;
+	CalculateSamplePositions();
+}
+
+void Renderer::DecreaseMSAA()
+{
+	if(m_SampleAmount / 4 < m_minSampleAmount)
+		return;
+
+	m_SampleAmount /= 4;
+	CalculateSamplePositions();
 }

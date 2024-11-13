@@ -52,11 +52,11 @@ void ShowFollowingScene(const FollowingSceneType& followingScene)
 {
 	switch (followingScene)
 	{
-	case FollowingSceneType::Previous:
+	case FollowingSceneType::Next:
 			g_SceneIndex++;
 			g_SceneIndex %= scenes.size();
 		break;
-	case FollowingSceneType::Next:
+	case FollowingSceneType::Previous:
 		if(g_SceneIndex == 0)
 		{
 			g_SceneIndex = scenes.size() -1;
@@ -72,6 +72,8 @@ void ShowFollowingScene(const FollowingSceneType& followingScene)
 
 	g_pScene = scenes[g_SceneIndex];
 	g_pScene->Initialize();
+
+	std::cout << "Displaying: " << g_pScene->GetSceneName() << std::endl;
 }
 
 int main(int argc, char* args[])
@@ -142,10 +144,16 @@ int main(int argc, char* args[])
 					ShowFollowingScene(FollowingSceneType::Next);
 
 				if(e.key.keysym.scancode == SDL_SCANCODE_UP)
+				{
 					pRenderer->IncreaseMSAA();
+					std::cout << "Current samples used for MSAA: " << pRenderer->GetSampleAmount() << std::endl;
+				}
 
 				if(e.key.keysym.scancode == SDL_SCANCODE_DOWN)
+				{
 					pRenderer->DecreaseMSAA();
+					std::cout << "Current samples used for MSAA: " << pRenderer->GetSampleAmount() << std::endl;
+				}
 
 				break;
 			}

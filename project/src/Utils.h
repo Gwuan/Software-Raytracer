@@ -107,18 +107,11 @@ namespace dae
 		//TRIANGLE HIT-TESTS
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			const Vector3 a = triangle.v1 - triangle.v0;
-			const Vector3 b = triangle.v2 - triangle.v0;
-			const Vector3 normal = Vector3::Cross(a, b);
-
-			const float normDotDirect = Vector3::Dot(normal, ray.direction);
-
-			
+			const float normDotDirect = Vector3::Dot(triangle.normal, ray.direction);
 			// Inverse if ignoreHitRecord is true,
 			// ignoreHitRecord is mostly used for shadows
 			if(ignoreHitRecord)
 			{
-
 				switch (triangle.cullMode)
 				{
 				case TriangleCullMode::BackFaceCulling:
@@ -156,7 +149,7 @@ namespace dae
 
 			const Vector3 L = triangle.v0 - ray.origin;
 
-			float t = Vector3::Dot(L, normal) / normDotDirect;
+			float t = Vector3::Dot(L, triangle.normal) / normDotDirect;
 
 			if (t < ray.min || t > ray.max)
 				return false;
@@ -170,7 +163,7 @@ namespace dae
 				const Vector3 e = vertices[nextIdx] - vertices[i];
 				const Vector3 pVector = point - vertices[i];
 
-				if (Vector3::Dot(Vector3::Cross(e, pVector), normal) < 0.f)
+				if (Vector3::Dot(Vector3::Cross(e, pVector), triangle.normal) < 0.f)
 					return false;
 			}
 
@@ -180,7 +173,6 @@ namespace dae
 				hitRecord.materialIndex = triangle.materialIndex;
 				hitRecord.didHit = true;
 				hitRecord.origin = point;
-				//hitRecord.normal = normal;
 				hitRecord.normal = triangle.normal;
 			}
 
@@ -196,7 +188,8 @@ namespace dae
 #pragma region TriangeMesh HitTest
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			// Slabtest first
+			// Slabtest first, check if ray is inside
+			// the AABB box of the current mesh
 			if(!SlabTest_TriangleMesh(mesh, ray))
 			{
 				return false;
@@ -208,7 +201,6 @@ namespace dae
 			temp.cullMode = mesh.cullMode;
 			temp.materialIndex = mesh.materialIndex;
 
-			HitRecord currentHit{};
 			HitRecord closestHit{};
 
 			for (size_t i{}; i < mesh.indices.size(); i += 3)
@@ -227,14 +219,14 @@ namespace dae
 
 
 
-				if(HitTest_Triangle(temp, ray, currentHit, ignoreHitRecord))
+				if(HitTest_Triangle(temp, ray, closestHit, ignoreHitRecord))
 				{
-					if(!ignoreHitRecord)
+					if(!ignoreHitRecord)  // Retrieve the closest hit
 					{
-						if(currentHit.t < hitRecord.t)
-							hitRecord = currentHit;
+						if(closestHit.t < hitRecord.t)
+							hitRecord = closestHit;
 					}
-					else
+					else  // For shadows it isn't necessary to keep track of the closes hit
 					{
 						return true;
 					}
@@ -255,7 +247,6 @@ namespace dae
 
 	namespace LightUtils
 	{
-		//Direction from target to light
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
 			// Both light types: Point & directional lights
@@ -264,7 +255,6 @@ namespace dae
 			// Return a unnormalized vector going from origin to lights origin
 			// Because the returned vector in unnormalized, you can perform the normalization call
 			// inside the shadowing logic and automatically capture the magnitude distance between hit and light.
-
 			if (light.type == LightType::Point)
 			{
 				return {light.origin - origin};

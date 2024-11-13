@@ -51,9 +51,9 @@ namespace dae
 			m_Materials.clear();
 		}
 
-	protected:
-		std::string	sceneName;
+		std::string GetSceneName() const { return m_SceneName; }
 
+	protected:
 		std::vector<Plane> m_PlaneGeometries{};
 		std::vector<Sphere> m_SphereGeometries{};
 		std::vector<TriangleMesh> m_TriangleMeshes{};
@@ -69,6 +69,8 @@ namespace dae
 		Light* AddPointLight(const Vector3& origin, float intensity, const ColorRGB& color);
 		Light* AddDirectionalLight(const Vector3& direction, float intensity, const ColorRGB& color);
 		unsigned char AddMaterial(Material* pMaterial);
+
+		std::string m_SceneName{};
 	};
 
 	//+++++++++++++++++++++++++++++++++++++++++

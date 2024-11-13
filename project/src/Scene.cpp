@@ -167,6 +167,7 @@ namespace dae {
 #pragma region SCENE W1
 	void Scene_W1::Initialize()
 	{
+		m_SceneName = "Week 1 - Final scene";
 		m_Camera.origin = { 0.f, 1.f, -18.f };
 		m_Camera.SetFovAngle(45.f);
 
@@ -198,6 +199,7 @@ namespace dae {
 #pragma region SCENE W2
 	void Scene_W2::Initialize()
 	{
+		m_SceneName = "Week 2 - Final scene";
 		m_Camera.origin = { 0.f, 3.f, -9.f };
 		m_Camera.SetFovAngle(45.f);
 
@@ -233,6 +235,7 @@ namespace dae {
 #pragma region SCENE W3 TESTSCENE
 	void Scene_W3_TestScene::Initialize()
 	{
+		m_SceneName = "week 3 - Test scene";
 		m_Camera.origin = { 0.f, 1.f, -5.f };
 		m_Camera.SetFovAngle(45.f);
 
@@ -261,6 +264,7 @@ namespace dae {
 
 	void Scene_W3::Initialize()
 	{
+		m_SceneName = "Week 3 - Final scene";
 		m_Camera.origin = { 0.f, 3.f, -9.f };
 		m_Camera.SetFovAngle(45.f);
 
@@ -293,7 +297,6 @@ namespace dae {
 		AddPointLight(Vector3{ 0.f, 5.f, 5.f }, 50.f, ColorRGB{ 1.f, .61f, .45f });  // Backlight
 		AddPointLight(Vector3{ -2.5f, 5.f, -5.f }, 70.f, ColorRGB{ 1.f, 0.8f, .45f });  // Front Light Left
 		AddPointLight(Vector3{ 2.5f, 2.5f, -5.f }, 50.f, ColorRGB{ .34f, .47f, .68f });
-
 	}
 
 
@@ -303,6 +306,7 @@ namespace dae {
 
 	void Scene_W4_TestScene::Initialize()
 	{
+		m_SceneName = "Week 4 - TestScene";
 		m_Camera.origin = { 0.f, 1.f, -5.f };
 		m_Camera.SetFovAngle(45.f);
 
@@ -357,7 +361,7 @@ namespace dae {
 
 	void Scene_W4_ReferenceScene::Initialize()
 	{
-		sceneName = "Reference Scene";
+		m_SceneName = "Week 4 - Reference Scene";
 		m_Camera.origin = { 0.f, 3.f, -9.f };
 		m_Camera.SetFovAngle(45.f);
 
@@ -427,8 +431,9 @@ namespace dae {
 
 #pragma region Scene_W04_BunnyScene
 
-		void Scene_W4_BunnyScene::Initialize()
+	void Scene_W4_BunnyScene::Initialize()
 	{
+		m_SceneName = "Week 4 - Bunny Scene";
 		m_Camera.origin = { 0.f, 3.f, -9.f };
 		m_Camera.SetFovAngle(45.f);
 
@@ -444,7 +449,7 @@ namespace dae {
 
 		m_pBunny->Translate({0.f, 0.f, 0.f});
 		m_pBunny->RotateY(180.f);
-		m_pBunny->Scale({2.f, 2.f, 2.f});
+		// m_pBunny->Scale({2.f, 2.f, 2.f});
 
 		m_pBunny->UpdateAABB();
 		m_pBunny->UpdateTransforms();
@@ -483,8 +488,8 @@ namespace dae {
 			m_pDebugModel->indices);
 
 		m_pDebugModel->Translate({0.f, 2.f, 0.f});
-		// m_pDebugModel->RotateY(180.f);
-		// m_pDebugModel->Scale({2.f, 2.f, 2.f});
+		m_pDebugModel->RotateY(180.f);
+		m_pDebugModel->Scale({2.f, 2.f, 2.f});
 
 		m_pDebugModel->UpdateAABB();
 		m_pDebugModel->UpdateTransforms();
