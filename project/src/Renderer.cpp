@@ -139,7 +139,7 @@ void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float 
 					lightRayOrigin,
 					lightDirNormalized,
 					0.0001f,
-					lightRayDirection.Magnitude()
+					light.type == LightType::Directional ? FLT_MAX : lightRayDirection.Magnitude()
 				};
 
 				// 1 for no shadow

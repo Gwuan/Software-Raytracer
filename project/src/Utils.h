@@ -267,11 +267,11 @@ namespace dae
 
 			if (light.type == LightType::Point)
 			{
-				return { light.origin - origin };
+				return {light.origin - origin};
 			}
 			else
 			{
-				return light.direction.Normalized() * FLT_MAX;
+				return light.direction;
 			}
 		}
 
