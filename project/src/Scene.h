@@ -42,6 +42,15 @@ namespace dae
 		const std::vector<Light>& GetLights() const { return m_Lights; }
 		const std::vector<Material*> GetMaterials() const { return m_Materials; }
 
+		void Deinitializing()
+		{
+			m_PlaneGeometries.clear();
+			m_SphereGeometries.clear();
+			m_TriangleMeshes.clear();
+			m_Lights.clear();
+			m_Materials.clear();
+		}
+
 	protected:
 		std::string	sceneName;
 
@@ -50,9 +59,6 @@ namespace dae
 		std::vector<TriangleMesh> m_TriangleMeshes{};
 		std::vector<Light> m_Lights{};
 		std::vector<Material*> m_Materials{};
-
-		// TEMP
-		std::vector<Triangle> m_Triangles{};
 
 		Camera m_Camera{};
 

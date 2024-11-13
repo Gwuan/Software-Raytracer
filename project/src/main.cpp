@@ -8,18 +8,62 @@
 
 //Standard includes
 #include <iostream>
+#include <vector>
 
 //Project includes
+#include <memory>
+
 #include "Timer.h"
 #include "Renderer.h"
 #include "Scene.h"
 
 using namespace dae;
 
+
+std::shared_ptr<Scene> g_pScene;
+uint32_t g_SceneIndex{ 5 };
+
+std::vector<std::shared_ptr<Scene>> scenes; 
+
+void InitScenes()
+{
+	scenes.push_back(std::make_shared<Scene_W1>());
+	scenes.push_back(std::make_shared<Scene_W2>());
+	scenes.push_back(std::make_shared<Scene_W3_TestScene>());
+	scenes.push_back(std::make_shared<Scene_W3>());
+	scenes.push_back(std::make_shared<Scene_W4_TestScene>());
+	scenes.push_back(std::make_shared<Scene_W4_ReferenceScene>());
+	scenes.push_back(std::make_shared<Scene_W4_BunnyScene>());
+}
+
 void ShutDown(SDL_Window* pWindow)
 {
 	SDL_DestroyWindow(pWindow);
 	SDL_Quit();
+}
+
+void ShowNextScene()
+{
+	g_SceneIndex++;
+	g_SceneIndex %= scenes.size();
+
+	// pScene.reset();
+
+	// delete pScene;
+	// pScene = nullptr;
+	g_pScene->Deinitializing();
+
+	g_pScene = scenes[g_SceneIndex];
+	g_pScene->Initialize();
+}
+
+void ShowPrevScene()
+{
+	g_SceneIndex = g_SceneIndex == 0 ? scenes.size() - 1 : g_SceneIndex - 1;
+
+	g_pScene->Deinitializing();
+	g_pScene = scenes[g_SceneIndex];
+	g_pScene->Initialize();
 }
 
 int main(int argc, char* args[])
@@ -47,16 +91,11 @@ int main(int argc, char* args[])
 	const auto pTimer = new Timer();
 	const auto pRenderer = new Renderer(pWindow);
 
-	//const auto pScene = new Scene_W1();
-	// const auto pScene = new Scene_W2();
-	// const auto pScene = new Scene_W3_TestScene();
-	// const auto pScene = new Scene_W3();
-	// const auto pScene = new Scene_W4_TestScene();
-	// const auto pScene = new Scene_W4_ReferenceScene();
-	const auto pScene = new Scene_W4_BunnyScene();
-	// const auto pScene = new Scene_Debug();
+	InitScenes();
 
-	pScene->Initialize();
+	g_pScene = scenes[g_SceneIndex];
+
+	g_pScene->Initialize();
 
 	//Start loop
 	pTimer->Start();
@@ -87,15 +126,21 @@ int main(int argc, char* args[])
 
 				if (e.key.keysym.scancode == SDL_SCANCODE_F3)
 					pRenderer->CycleLightingMode();
+
+				if(e.key.keysym.scancode == SDL_SCANCODE_LEFT)
+					ShowPrevScene();
+
+				if(e.key.keysym.scancode == SDL_SCANCODE_RIGHT)
+					ShowNextScene();
 				break;
 			}
 		}
 
 		//--------- Update ---------
-		pScene->Update(pTimer);
+		g_pScene->Update(pTimer);
 
 		//--------- Render ---------
-		pRenderer->Render(pScene);
+		pRenderer->Render(g_pScene.get());
 
 		//--------- Timer ---------
 		pTimer->Update();
@@ -119,7 +164,7 @@ int main(int argc, char* args[])
 	pTimer->Stop();
 
 	//Shutdown "framework"
-	delete pScene;
+	g_pScene.reset();
 	delete pRenderer;
 	delete pTimer;
 
