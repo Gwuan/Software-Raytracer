@@ -6,7 +6,11 @@
 struct SDL_Window;
 struct SDL_Surface;
 
-
+struct Vector2
+{
+	float x;
+	float y;
+};
 
 
 namespace dae
@@ -33,7 +37,44 @@ namespace dae
 		void CycleLightingMode();
 		void ToggleShadows() { m_ShadowsEnabled = !m_ShadowsEnabled; }
 
+		void IncreaseMSAA()
+		{
+			if(m_SampleAmount * 4 > m_MaxSampleAmount)
+				return;
+
+			m_SampleAmount *= 4;
+			CalculateSamplePositions();
+		}
+
+		void DecreaseMSAA()
+		{
+			if(m_SampleAmount / 4 < m_minSampleAmount)
+				return;
+
+			m_SampleAmount /= 4;
+			CalculateSamplePositions();
+		}
+
 	private:
+
+		void CalculateSamplePositions()
+		{
+			m_SamplePositions.clear();
+			m_SamplePositions.reserve(m_SampleAmount);
+
+			uint32_t sqrtSample = sqrt(m_SampleAmount);
+
+			for (uint32_t y{}; y < sqrtSample; y++)
+			{
+				const float tempY = (y + .5f) / sqrtSample;
+				for (uint32_t x{}; x < sqrtSample; x++)
+				{
+					const float tempX = (x + .5f) / sqrtSample;
+					m_SamplePositions.emplace_back(tempX, tempY);
+				}
+			}
+		}
+
 		enum class LightingMode
 		{
 			ObservedArea,  // Lambert Cosine Law
@@ -55,5 +96,16 @@ namespace dae
 		int m_Height{};
 
 		float m_AspectRatio;
+
+
+		// Samples for anti-aliasing
+		uint32_t m_SampleAmount = 1;
+		std::vector<Vector2> m_SamplePositions;
+
+		static const uint32_t m_MaxSampleAmount = 16; 
+		static const uint32_t m_minSampleAmount = 1;
+		
+
+
 	};
 }

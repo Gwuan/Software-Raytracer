@@ -26,6 +26,8 @@ Renderer::Renderer(SDL_Window * pWindow) :
 
 	// Calculate AspectRatio for CDN
 	m_AspectRatio = static_cast<float>(m_Width) / static_cast<float>(m_Height);
+
+	CalculateSamplePositions();
 }
 
 void applyToneMapping(ColorRGB& color) {
@@ -76,35 +78,14 @@ void Renderer::Render(Scene* pScene) const
 	SDL_UpdateWindowSurface(m_pWindow);
 }
 
-struct vector2
-{
-	float x;
-	float y;
-};
 
 void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float aspectRatio, const Matrix cameraToWorld, const Vector3 cameraOrigin) const
 {
 	auto materials{pScene->GetMaterials()};
-
 	const uint32_t px{ pixelIndex % m_Width }, py{ pixelIndex / m_Width };
-
-	const uint32_t sampleCount{ 4 };
-
-	vector2 samples[sampleCount]{};
-	uint32_t sqrtSample = sqrt(sampleCount);
-
-	for (uint32_t y{}; y < sqrtSample; y++)
-	{
-		const float tempY = (y + .5f) / sqrtSample;
-		for (uint32_t x{}; x < sqrtSample; x++)
-		{
-			const float tempX = (x + .5f) / sqrtSample;
-			samples[x + (y * sqrtSample)] = { tempX, tempY };
-		}
-	}
-
 	ColorRGB finalColor{};
-	for(const auto& s : samples)
+
+	for(const auto& s : m_SamplePositions)
 	{
 		ColorRGB currentSampleColor{};
 
@@ -112,7 +93,6 @@ void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float 
 		float cx{ (2 * (rx / float(m_Width)) - 1) * aspectRatio * fov };
 		float cy{ (1 - (2 * (ry / float(m_Height)))) * fov };
 
-		// inside the double loop
 		Vector3 rayDirection{ cx, cy, 1 };
 		rayDirection = cameraToWorld.TransformVector(rayDirection);
 		rayDirection.Normalize();
@@ -172,9 +152,8 @@ void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float 
 			}
 		}
 
-		finalColor += (currentSampleColor / sampleCount);
+		finalColor += (currentSampleColor / m_SampleAmount);
 	}
-
 	finalColor.MaxToOne();
 
 	// std::cout << px << ", " << py << std::endl;

@@ -42,26 +42,34 @@ void ShutDown(SDL_Window* pWindow)
 	SDL_Quit();
 }
 
-void ShowNextScene()
+enum FollowingSceneType
 {
-	g_SceneIndex++;
-	g_SceneIndex %= scenes.size();
+	Previous,
+	Next
+};
 
-	// pScene.reset();
+void ShowFollowingScene(const FollowingSceneType& followingScene)
+{
+	switch (followingScene)
+	{
+	case FollowingSceneType::Previous:
+			g_SceneIndex++;
+			g_SceneIndex %= scenes.size();
+		break;
+	case FollowingSceneType::Next:
+		if(g_SceneIndex == 0)
+		{
+			g_SceneIndex = scenes.size() -1;
+		}
+		else
+		{
+			g_SceneIndex--;
+		}
+		break;
+	}
 
-	// delete pScene;
-	// pScene = nullptr;
 	g_pScene->Deinitializing();
 
-	g_pScene = scenes[g_SceneIndex];
-	g_pScene->Initialize();
-}
-
-void ShowPrevScene()
-{
-	g_SceneIndex = g_SceneIndex == 0 ? scenes.size() - 1 : g_SceneIndex - 1;
-
-	g_pScene->Deinitializing();
 	g_pScene = scenes[g_SceneIndex];
 	g_pScene->Initialize();
 }
@@ -128,10 +136,17 @@ int main(int argc, char* args[])
 					pRenderer->CycleLightingMode();
 
 				if(e.key.keysym.scancode == SDL_SCANCODE_LEFT)
-					ShowPrevScene();
+					ShowFollowingScene(FollowingSceneType::Previous);
 
 				if(e.key.keysym.scancode == SDL_SCANCODE_RIGHT)
-					ShowNextScene();
+					ShowFollowingScene(FollowingSceneType::Next);
+
+				if(e.key.keysym.scancode == SDL_SCANCODE_UP)
+					pRenderer->IncreaseMSAA();
+
+				if(e.key.keysym.scancode == SDL_SCANCODE_DOWN)
+					pRenderer->DecreaseMSAA();
+
 				break;
 			}
 		}
