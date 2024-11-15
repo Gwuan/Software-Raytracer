@@ -49,6 +49,9 @@ namespace dae
 			m_TriangleMeshes.clear();
 			m_Lights.clear();
 			m_Materials.clear();
+
+			m_Camera.totalPitch = 0;
+			m_Camera.totalYaw = 0;
 		}
 
 		std::string GetSceneName() const { return m_SceneName; }
