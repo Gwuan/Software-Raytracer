@@ -150,9 +150,7 @@ namespace dae
 			const Matrix finalTransform = scaleTransform * rotationTransform * translationTransform;
 
 			UpdatePositions(finalTransform);
-
 			UpdateNormals(finalTransform);
-
 
 			// Update AABB
 			UpdateTransformedAABB(finalTransform);
@@ -199,7 +197,7 @@ namespace dae
 
 		void UpdateAABB()
 		{
-			if(positions.size() > 0)
+			if(!positions.empty())
 			{
 				minAABB = positions[0];
 				maxAABB = positions[0];
@@ -217,34 +215,42 @@ namespace dae
 			Vector3 tMinAABB = finalTransform.TransformPoint(minAABB);
 			Vector3 tMaxAABB = finalTransform.TransformPoint(maxAABB);
 
+			// (maxX, minY, minZ)
 			Vector3 tAABB = finalTransform.TransformPoint(maxAABB.x, minAABB.y, minAABB.z);
 			tMinAABB = Vector3::Min(tAABB, tMinAABB);
 			tMaxAABB = Vector3::Max(tAABB, tMaxAABB);
 
+			// (maxX, minY, maxZ)
 			tAABB = finalTransform.TransformPoint(maxAABB.x, minAABB.y, maxAABB.z);
 			tMinAABB = Vector3::Min(tAABB, tMinAABB);
 			tMaxAABB = Vector3::Max(tAABB, tMaxAABB);
 
+			// (minX, minY, maxZ)
 			tAABB = finalTransform.TransformPoint(minAABB.x, minAABB.y, maxAABB.z);
 			tMinAABB = Vector3::Min(tAABB, tMinAABB);
 			tMaxAABB = Vector3::Max(tAABB, tMaxAABB);
 
+			// (minX, maxY, minZ)
 			tAABB = finalTransform.TransformPoint(minAABB.x, maxAABB.y, minAABB.z);
 			tMinAABB = Vector3::Min(tAABB, tMinAABB);
 			tMaxAABB = Vector3::Max(tAABB, tMaxAABB);
 
+			// (maxX, maxY, minZ)
 			tAABB = finalTransform.TransformPoint(maxAABB.x, maxAABB.y, minAABB.z);
 			tMinAABB = Vector3::Min(tAABB, tMinAABB);
 			tMaxAABB = Vector3::Max(tAABB, tMaxAABB);
 
+			// (maxX, maxY, maxZ)
 			tAABB = finalTransform.TransformPoint(maxAABB);
 			tMinAABB = Vector3::Min(tAABB, tMinAABB);
 			tMaxAABB = Vector3::Max(tAABB, tMaxAABB);
 
+			// (minX, maxY, maxZ)
 			tAABB = finalTransform.TransformPoint(minAABB.x, maxAABB.y, maxAABB.z);
 			tMinAABB = Vector3::Min(tAABB, tMinAABB);
 			tMaxAABB = Vector3::Max(tAABB, tMaxAABB);
 
+			// Apply min and max
 			transformedMinAABB = tMinAABB;
 			transformedMaxAABB = tMaxAABB;
 		}

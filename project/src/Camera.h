@@ -17,7 +17,7 @@ namespace dae
 			origin{ _origin },
 			fovAngle{ _fovAngle }
 		{
-			CalculateFov();
+			CalculateFovValue();
 		}
 
 
@@ -37,13 +37,13 @@ namespace dae
 
 		float GetFovValue() const { return m_fovValue; }
 
-		void SetFovAngle(float angle)  // Adjust angle of FOV in degrees
+		void SetFovAngle(float angle)  // Adjust the angle of FOV in degrees
 		{
 			fovAngle = angle;
-			CalculateFov();
+			CalculateFovValue();  
 		}
 
-		void CalculateFov()
+		void CalculateFovValue()
 		{
 			float fovAngleRad{ fovAngle / 180 * PI };
 			m_fovValue = tan(fovAngleRad / 2);
@@ -92,19 +92,22 @@ namespace dae
 			int mouseX{}, mouseY{};
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
-			if (mouseState == SDL_BUTTON(1))  // Left Mouse Button
+			// Left mouse button
+			if (mouseState == SDL_BUTTON(1)) 
 			{
 				this->origin += this->forward * ((mouseY * -1) * m_MoveSpeed) * elapsedTime;
 				this->totalYaw += mouseX * m_RotationSpeed * elapsedTime;
 			}
 
-			if (mouseState == SDL_BUTTON(3))  // Right Mouse Button
+			// Right Mouse button
+			if (mouseState == SDL_BUTTON(3)) 
 			{
 				this->totalPitch += (mouseY * -1) * m_RotationSpeed * elapsedTime;
 				this->totalYaw += mouseX * m_RotationSpeed * elapsedTime;
 			}
 
-			if (mouseState == SDL_BUTTON(1) + SDL_BUTTON(3))  // Left & Right button
+			// Left & Right mouse buttons
+			if (mouseState == SDL_BUTTON(1) + SDL_BUTTON(3))
 			{
 				this->origin += worldUp * ((mouseY * -1) * m_MoveSpeed * elapsedTime);
 			}
@@ -113,9 +116,9 @@ namespace dae
 
 	private:
 		float fovAngle{ 90.f };
-		float m_fovValue{};  // TODO: Create a better identifier
+		float m_fovValue;
 
-		const float m_MoveSpeed = 5.f;
-		const float m_RotationSpeed = 0.2f;
+		constexpr static float m_MoveSpeed = 5.f;
+		constexpr static float m_RotationSpeed = 0.2f;
 	};
 }

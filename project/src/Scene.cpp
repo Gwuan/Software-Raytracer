@@ -36,14 +36,8 @@ namespace dae {
 		{
 			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, currentHit))
 			{
-				if (closestHit.didHit != 0)
-				{
-					closestHit = currentHit.t < closestHit.t ? currentHit : closestHit;
-				}
-				else
-				{
+				if (!closestHit.didHit || currentHit.t < closestHit.t)
 					closestHit = currentHit;
-				}
 			}
 		}
 
@@ -51,13 +45,8 @@ namespace dae {
 		{
 			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, currentHit))
 			{
-				if (!closestHit.didHit)
+				if (!closestHit.didHit || currentHit.t < closestHit.t)
 					closestHit = currentHit;
-				else
-				{
-					if (currentHit.t < closestHit.t)
-						closestHit = currentHit;
-				}
 			}
 		}
 
@@ -65,13 +54,8 @@ namespace dae {
 		{
 			if (GeometryUtils::HitTest_TriangleMesh(m_TriangleMeshes[i], ray, currentHit))
 			{
-				if (!closestHit.didHit)
+				if (!closestHit.didHit || currentHit.t < closestHit.t)
 					closestHit = currentHit;
-				else
-				{
-					if (currentHit.t < closestHit.t)
-						closestHit = currentHit;
-				}
 			}
 		}
 	}

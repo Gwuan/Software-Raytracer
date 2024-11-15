@@ -48,8 +48,7 @@ namespace dae
 			const float dot{ Vector3::Dot(h, v) };
 
 
-			ColorRGB result = (f0 + ((f1 - f0) * pow( 1- dot,5)));
-			return result;
+			return f0 + ((f1 - f0) * pow( 1- dot,5));
 		}
 
 		/**

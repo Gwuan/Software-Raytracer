@@ -40,28 +40,14 @@ namespace dae
 		// Anti Aliassing
 		void IncreaseMSAA();
 		void DecreaseMSAA();
+		void CalculateSampleColorStrength();
+
 		uint32_t GetSampleAmount() const { return m_SampleAmount; }
 
 
 	private:
 
-		void CalculateSamplePositions()
-		{
-			m_SamplePositions.clear();
-			m_SamplePositions.reserve(m_SampleAmount);
-
-			uint32_t sqrtSample = sqrt(m_SampleAmount);
-
-			for (uint32_t y{}; y < sqrtSample; y++)
-			{
-				const float tempY = (y + .5f) / sqrtSample;
-				for (uint32_t x{}; x < sqrtSample; x++)
-				{
-					const float tempX = (x + .5f) / sqrtSample;
-					m_SamplePositions.emplace_back(tempX, tempY);
-				}
-			}
-		}
+		void CalculateSamplePositions();
 
 		enum class LightingMode
 		{
@@ -84,16 +70,17 @@ namespace dae
 		int m_Height{};
 
 		float m_AspectRatio;
+		const float m_ShadowStrength = 0.5f;
 
 
 		// Samples for anti-aliasing
 		uint32_t m_SampleAmount = 1;
 		std::vector<Vector2> m_SamplePositions;
-
-		static const uint32_t m_MaxSampleAmount = 16; 
-		static const uint32_t m_minSampleAmount = 1;
+		float m_SampleColorStrength;
 		
 
+		const uint32_t m_MaxSampleAmount = 16; 
+		const uint32_t m_minSampleAmount = 1;
 
 	};
 }

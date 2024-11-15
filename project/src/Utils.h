@@ -34,6 +34,8 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
+			// Implemented the simplified sphere hit test calculation from raytracing in a weekend
+			// https://raytracing.github.io/books/RayTracingInOneWeekend.html#surfacenormalsandmultipleobjects/simplifyingtheray-sphereintersectioncode
 			const Vector3 SphereRayVec{ sphere.origin - ray.origin };
 
 			const float a = ray.direction.SqrMagnitude();
@@ -48,6 +50,7 @@ namespace dae
 			const float squareD = sqrt(discriminant);
 			float t = (b - squareD) / a;
 
+			// Check if distance between startPos & hitPos is in the range of the ray
 			if (t < ray.min || t > ray.max)
 			{
 				t = (b + squareD) / a;
@@ -58,13 +61,12 @@ namespace dae
 			if(!ignoreHitRecord)
 			{
 				const Vector3 hitLocation{ ray.origin + (ray.direction * t) };
-				const Vector3 hitToCenter{ hitLocation - sphere.origin };
 
 				hitRecord.didHit = true;
 				hitRecord.origin = hitLocation;
 				hitRecord.materialIndex = sphere.materialIndex;
 				hitRecord.t = t;
-				hitRecord.normal = hitToCenter.Magnitude() > 0 ? hitToCenter.Normalized() : Vector3(0,0,0);
+				hitRecord.normal = (hitLocation - sphere.origin).Normalized();
 			}
 
 			return true;
@@ -80,8 +82,10 @@ namespace dae
 		//PLANE HIT-TESTS
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			const float t = Vector3::Dot((plane.origin - ray.origin), plane.normal) / Vector3::Dot(ray.direction, plane.normal);
+			const Vector3 rayToPlane{ plane.origin - ray.origin };
+			const float t = Vector3::Dot(rayToPlane, plane.normal) / Vector3::Dot(ray.direction, plane.normal);
 
+			// Check if ray distance is inside range of the ray
 			if (t < ray.min || t > ray.max)
 				return false;
 
@@ -147,21 +151,26 @@ namespace dae
 				}
 			}
 
-			const Vector3 L = triangle.v0 - ray.origin;
+			const Vector3 rayToTriangle = triangle.v0 - ray.origin;
 
-			float t = Vector3::Dot(L, triangle.normal) / normDotDirect;
+			float t = Vector3::Dot(rayToTriangle, triangle.normal) / normDotDirect;
 
 			if (t < ray.min || t > ray.max)
 				return false;
 
-			const Vector3 point = ray.origin + (ray.direction * t);
+			const Vector3 hitPoint = ray.origin + (ray.direction * t);
 
+			// Placing the vertices inside an array, easier to loop over
 			const Vector3 vertices[]{triangle.v0, triangle.v1, triangle.v2};
+
+			// Looping over the vertices to check if the ray is outside the triangle
 			for (size_t i{0}; i < std::size(vertices); i++)
 			{
+				// Calculating the next index
 				const uint32_t nextIdx = (i + 1) % std::size(vertices);
+
 				const Vector3 e = vertices[nextIdx] - vertices[i];
-				const Vector3 pVector = point - vertices[i];
+				const Vector3 pVector = hitPoint - vertices[i];
 
 				if (Vector3::Dot(Vector3::Cross(e, pVector), triangle.normal) < 0.f)
 					return false;
@@ -172,7 +181,7 @@ namespace dae
 				hitRecord.t = t;
 				hitRecord.materialIndex = triangle.materialIndex;
 				hitRecord.didHit = true;
-				hitRecord.origin = point;
+				hitRecord.origin = hitPoint;
 				hitRecord.normal = triangle.normal;
 			}
 
@@ -197,7 +206,11 @@ namespace dae
 
 			const std::vector<int>& indices = mesh.indices;
 
+			// Creating the triangle once, for performance reasons
 			Triangle temp{};
+
+			// Applying the default settings for each triangle before looping over them,
+			// better performance
 			temp.cullMode = mesh.cullMode;
 			temp.materialIndex = mesh.materialIndex;
 
@@ -205,9 +218,12 @@ namespace dae
 
 			for (size_t i{}; i < mesh.indices.size(); i += 3)
 			{
+				// Calculating the which indices we have to pick for each vertex
 				const int v0Index = indices[i];
 				const int v1Index = indices[i + 1];
 				const int v2Index = indices[i + 2];
+
+				// 
 				temp.v0 = mesh.transformedPositions[v0Index];
 				temp.v1 = mesh.transformedPositions[v1Index];
 				temp.v2 = mesh.transformedPositions[v2Index];
@@ -226,7 +242,7 @@ namespace dae
 						if(closestHit.t < hitRecord.t)
 							hitRecord = closestHit;
 					}
-					else  // For shadows it isn't necessary to keep track of the closes hit
+					else  // For shadows, it isn't necessary to keep track of the closes hit
 					{
 						return true;
 					}
@@ -250,10 +266,10 @@ namespace dae
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
 			// Both light types: Point & directional lights
-			// (direction lights dont have an origin, magnitude of this direction is equal to FLT_MAX)
+			// (direction lights don't have an origin, magnitude of this direction is equal to FLT_MAX)
 
-			// Return a unnormalized vector going from origin to lights origin
-			// Because the returned vector in unnormalized, you can perform the normalization call
+			// Return a not normalized vector going from origin to lights origin
+			// Because the returned vector in not normalized, you can perform the normalization call
 			// inside the shadowing logic and automatically capture the magnitude distance between hit and light.
 			if (light.type == LightType::Point)
 			{

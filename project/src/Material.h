@@ -106,6 +106,7 @@ namespace dae
 
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
 		{
+			// Assign f0 as the albedo if the material is metal, otherwise pass by the default color value
 			const ColorRGB f0 = (m_Metalness < 1.f) ? ColorRGB(.04f, .04f, .04f) : m_Albedo;
 
 			const Vector3 halfVector{ Vector3(v + l).Normalized() };

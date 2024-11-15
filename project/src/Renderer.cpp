@@ -27,16 +27,20 @@ Renderer::Renderer(SDL_Window * pWindow) :
 	// Calculate AspectRatio for CDN
 	m_AspectRatio = static_cast<float>(m_Width) / static_cast<float>(m_Height);
 
+	// Calculate Samples positions, based on a grid in uniform distribution
+	// https://en.wikipedia.org/wiki/Supersampling#Supersampling_patterns
 	CalculateSamplePositions();
+
+	// Calculates each samples color strength,
+	// instead of static_casting each samples and each frame,
+	// it's done here once and once IncreaseSamples() or DecreaseSamples() gets called
+	CalculateSampleColorStrength();
 }
 
 void Renderer::Render(Scene* pScene) const
 {
 	Camera& camera = pScene->GetCamera();
 	const Matrix& cameraToWorld = camera.CalculateCameraToWorld();
-
-	const float aspectRatio = m_Width / static_cast<float>(m_Height);
-
 	const float fov = camera.GetFovValue();
 
 #if defined(PARALLEL_EXECUTION)
@@ -49,13 +53,12 @@ void Renderer::Render(Scene* pScene) const
 
 	std::for_each(std::execution::par, pixelIndices.begin(), pixelIndices.end(), [&](int i)
 	{
-		RenderPixel(pScene, i, fov, aspectRatio, cameraToWorld, camera.origin);
+		RenderPixel(pScene, i, fov, m_AspectRatio, cameraToWorld, camera.origin);
 	});
 #else
 	uint32_t amountOfPixels{ uint32_t(m_Width * m_Height) };
 	for(uint32_t pixelIndex{}; pixelIndex < amountOfPixels; pixelIndex++)
 	{
-		// std::cout << "current pixelIndex: " << pixelIndex << ", amount of pixels: " << amountOfPixels << " ";
 		RenderPixel(pScene, pixelIndex, fov, aspectRatio, cameraToWorld, camera.origin);
 	}
 #endif
@@ -68,36 +71,40 @@ void Renderer::Render(Scene* pScene) const
 
 void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float aspectRatio, const Matrix cameraToWorld, const Vector3 cameraOrigin) const
 {
+	// Initialize local variables once each 
 	auto materials{pScene->GetMaterials()};
+	const auto& lights = pScene->GetLights();
 	const uint32_t px{ pixelIndex % m_Width }, py{ pixelIndex / m_Width };
 	ColorRGB finalColor{};
 
 	for(const auto& s : m_SamplePositions)
 	{
-		ColorRGB currentSampleColor{};
+		// Calculate ray start pos in screen space based on samples positions
+		// NOTE: The sample positions are grid based that is why only factor of 4 can be used
+		const float rx{px + s.x}, ry{ py + s.y };
 
-		float rx{px + s.x}, ry{ py + s.y };
-		float cx{ (2 * (rx / float(m_Width)) - 1) * aspectRatio * fov };
-		float cy{ (1 - (2 * (ry / float(m_Height)))) * fov };
+		// Convert screen space coordinates to NDC
+		const float cx{ (2 * (rx / float(m_Width)) - 1) * aspectRatio * fov };
+		const float cy{ (1 - (2 * (ry / float(m_Height)))) * fov };
 
 		Vector3 rayDirection{ cx, cy, 1 };
 		rayDirection = cameraToWorld.TransformVector(rayDirection);
 		rayDirection.Normalize();
 
 		Ray viewRay{ cameraOrigin, rayDirection };
-
-
 		HitRecord closestHit{};
+
 		pScene->GetClosestHit(viewRay, closestHit);
 
-		const auto& lights = pScene->GetLights();
+		ColorRGB currentSampleColor{};
 		if (closestHit.didHit)
 		{
 			for (const Light& light : lights)
 			{
 				ColorRGB currentLightColor{};
 
-				const Vector3 lightRayOrigin{ closestHit.origin + closestHit.normal * 0.0001f };
+				// Add 0.0001 distance to prevents the model to cast shadows on itself
+				const Vector3 lightRayOrigin{ closestHit.origin + closestHit.normal * 0.0001f };   
 				const Vector3 lightRayDirection{ LightUtils::GetDirectionToLight(light, lightRayOrigin) };
 				const Vector3 lightDirNormalized{ lightRayDirection.Normalized() };
 
@@ -109,42 +116,63 @@ void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float 
 					light.type == LightType::Directional ? FLT_MAX : lightRayDirection.Magnitude()
 				};
 
-				// 1 for no shadow
-				const float shadow = (pScene->DoesHit(lightRay) && m_ShadowsEnabled) ? 0.6f : 1.f;
+				// Check if shadow needs to be cast on current sample
+				const bool shadowOnSample{ pScene->DoesHit(lightRay) && m_ShadowsEnabled };
 
-				const float ObserveredArea{ Vector3::Dot(closestHit.normal, lightDirNormalized) };  // Lambert cosine law
-				const ColorRGB BRDF{ materials[closestHit.materialIndex]->Shade(closestHit, lightDirNormalized, -rayDirection.Normalized()) };
+				// Lambert cosine law
+				const float ObservedArea{ Vector3::Dot(closestHit.normal, lightDirNormalized) };  
 
-
+				// Different Render settings based on each mode
 				switch (m_CurrentLightingMode)
 				{
 				case LightingMode::Combined:
-					if (ObserveredArea > 0)
-						currentLightColor += LightUtils::GetRadiance(light, closestHit.origin) * BRDF * ObserveredArea;
+					if (ObservedArea > 0)
+					{
+						const ColorRGB BRDF{
+							materials[closestHit.materialIndex]->Shade(
+								closestHit, 
+								lightDirNormalized, 
+								-rayDirection.Normalized()
+							)
+						};
+
+						currentLightColor += LightUtils::GetRadiance(light, closestHit.origin) * BRDF * ObservedArea;
+					}
 					break;
 				case LightingMode::ObservedArea:
-					if (ObserveredArea > 0)
-						currentLightColor += ColorRGB(1, 1, 1) * ObserveredArea;
+
+					if (ObservedArea > 0)
+						currentLightColor += ColorRGB(1, 1, 1) * ObservedArea;
+
 					break;
 				case LightingMode::Radiance:
 					currentLightColor += LightUtils::GetRadiance(light, closestHit.origin);
 					break;
 				case LightingMode::BRDF:
+					const ColorRGB BRDF{
+						materials[closestHit.materialIndex]->Shade(
+							closestHit, 
+							lightDirNormalized, 
+							-rayDirection.Normalized()
+						)
+					};
+
 					currentLightColor += BRDF;
 					break;
 				}
 
-				currentLightColor *= shadow;
+				if(shadowOnSample)
+					currentLightColor *= m_ShadowStrength;
+
 				currentSampleColor += currentLightColor;
 			}
 		}
 
-		finalColor += (currentSampleColor / m_SampleAmount);
+		finalColor += currentSampleColor * m_SampleColorStrength;
 	}
+
 	finalColor.MaxToOne();
 
-	// std::cout << px << ", " << py << std::endl;
-	// std::cout << "bufferPixelIndex: " << px + (py * m_Width) << std::endl;
 	m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
 		static_cast<uint8_t>(finalColor.r * 255),
 		static_cast<uint8_t>(finalColor.g * 255),
@@ -158,8 +186,8 @@ bool Renderer::SaveBufferToImage() const
 
 void Renderer::CycleLightingMode()
 {
-	std::cout << static_cast<int>(m_CurrentLightingMode) << std::endl;
-	m_CurrentLightingMode = LightingMode((static_cast<int>(m_CurrentLightingMode) + 1) % static_cast<int>(LightingMode::TOTAL_MODES));
+	std::cout << "Current lighting mode: " << static_cast<int>(m_CurrentLightingMode) << std::endl;
+	m_CurrentLightingMode = static_cast<LightingMode>((static_cast<int>(m_CurrentLightingMode) + 1) % static_cast<int>(LightingMode::TOTAL_MODES));
 }
 
 void Renderer::IncreaseMSAA()
@@ -169,6 +197,8 @@ void Renderer::IncreaseMSAA()
 
 	m_SampleAmount *= 4;
 	CalculateSamplePositions();
+
+	CalculateSampleColorStrength();
 }
 
 void Renderer::DecreaseMSAA()
@@ -178,4 +208,30 @@ void Renderer::DecreaseMSAA()
 
 	m_SampleAmount /= 4;
 	CalculateSamplePositions();
+
+	CalculateSampleColorStrength();
+}
+
+void Renderer::CalculateSampleColorStrength()
+{
+	m_SampleColorStrength = 1.f / static_cast<float>(m_SampleAmount);
+}
+
+void Renderer::CalculateSamplePositions()
+{
+	m_SamplePositions.clear();
+	m_SamplePositions.reserve(m_SampleAmount);
+
+	uint32_t sqrtSample = sqrt(m_SampleAmount);
+
+	for (uint32_t y{}; y < sqrtSample; y++)
+	{
+		const float tempY = (y + .5f) / sqrtSample;
+		for (uint32_t x{}; x < sqrtSample; x++)
+		{
+			const float tempX = (x + .5f) / sqrtSample;
+			m_SamplePositions.emplace_back(tempX, tempY);
+		}
+	}
+
 }
