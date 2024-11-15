@@ -112,6 +112,10 @@ namespace dae
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			const float normDotDirect = Vector3::Dot(triangle.normal, ray.direction);
+
+			if(AreEqual(normDotDirect, 0.f))
+				return false;
+
 			// Inverse if ignoreHitRecord is true,
 			// ignoreHitRecord is mostly used for shadows
 			if(ignoreHitRecord)
@@ -126,10 +130,6 @@ namespace dae
 					if (normDotDirect > 0.f)
 						return false;
 					break;
-				case TriangleCullMode::NoCulling:
-					if(AreEqual(normDotDirect, 0.f))
-						return false;
-					break;
 				}
 			}
 			else
@@ -142,10 +142,6 @@ namespace dae
 					break;
 				case TriangleCullMode::FrontFaceCulling:
 					if (normDotDirect <=0.f)
-						return false;
-					break;
-				case TriangleCullMode::NoCulling:
-					if(AreEqual(normDotDirect, 0.f))
 						return false;
 					break;
 				}
@@ -182,7 +178,10 @@ namespace dae
 				hitRecord.materialIndex = triangle.materialIndex;
 				hitRecord.didHit = true;
 				hitRecord.origin = hitPoint;
-				hitRecord.normal = triangle.normal;
+
+				// If the ray hits the backface of the triangle, the normal of the hitrecord is inverted. This
+				// will cast the right lights on the backface of the triangle.
+				hitRecord.normal = (normDotDirect > 0.f) ? -triangle.normal : triangle.normal;
 			}
 
 			return true;
