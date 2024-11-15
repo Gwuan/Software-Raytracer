@@ -24,7 +24,7 @@ The current amount of samples can now be adjusted with the **up/down arrow keys*
 - **Left Arrow** -> Load previous Scene
 - **Right Arrow** -> Load next Scene
 
-### MSAA
+### Multi-Sample Anti-Aliasing (MSAA)
 
 - **Up Arrow** -> Increase sample count
     - (*currentSampleAmount x 4*)
