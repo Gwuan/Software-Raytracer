@@ -30,3 +30,13 @@ The current amount of samples can now be adjusted with the **up/down arrow keys*
     - (*currentSampleAmount x 4*)
 - **Up Arrow** -> Decrease sample count
     - (*currentSampleAmount / 4*)
+
+
+## Shading Mode Comparison
+
+| **Shading Mode**   | **Reference Scene**                                                                                                                                               | **lowpoly_bunny.obj**                                                                                                                                            |
+|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Combined**        | <img src="./GitMedia/ReferenceScene/RayTracing_Buffer_Reference_Combined.png" alt="drawing" width="600"/>                                                        | <img src="./GitMedia/Bunny/RayTracing_Buffer_Bunny_Combined.png" alt="drawing" width="600"/>                                                                    |
+| **Observed Area**   | <img src="./GitMedia/ReferenceScene/RayTracing_Buffer_Reference_ObservedArea.png" alt="drawing" width="600"/>                                                     | <img src="./GitMedia/Bunny/RayTracing_Buffer_Bunny_ObservedArea.png" alt="drawing" width="600"/>                                                                |
+| **Radiance**        | <img src="./GitMedia/ReferenceScene/RayTracing_Buffer_Reference_Radiance.png" alt="drawing" width="600"/>                                                         | <img src="./GitMedia/Bunny/RayTracing_Buffer_Bunny_Radiance.png" alt="drawing" width="600"/>                                                                    |
+| **Raw BRDF Data**   | <img src="./GitMedia/ReferenceScene/RayTracing_Buffer_Reference_RawBRDF.png" alt="drawing" width="600"/>                                                          | <img src="./GitMedia/Bunny/RayTracing_Buffer_Bunny_RawBRDF.png" alt="drawing" width="600"/>                                                                     |
